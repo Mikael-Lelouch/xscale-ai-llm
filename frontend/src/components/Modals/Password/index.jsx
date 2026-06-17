@@ -12,14 +12,27 @@ import useLogo from "../../../hooks/useLogo";
 export default function PasswordModal({ mode = "single" }) {
   const { loginLogo, isCustomLogo } = useLogo();
   return (
-    <div className="fixed inset-0 bg-zinc-950 light:bg-slate-50 flex flex-col items-center justify-center overflow-hidden">
-      <img
-        src={loginLogo}
-        alt="Logo"
-        className={`max-h-[80px] ${isCustomLogo ? "rounded-lg" : ""}`}
-        style={{ objectFit: "contain" }}
+    <div className="fixed inset-0 bg-login-gradient light:bg-slate-50 flex flex-col items-center justify-center overflow-hidden">
+      {/* XSCALE ambient glow */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-1/3 left-1/2 -translate-x-1/2 h-[640px] w-[640px] rounded-full blur-[120px] opacity-30 light:opacity-20"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(6,182,212,0.55) 0%, rgba(20,184,166,0.25) 45%, transparent 70%)",
+        }}
       />
-      {mode === "single" ? <SingleUserAuth /> : <MultiUserAuth />}
+      <div className="relative z-10 flex flex-col items-center">
+        <img
+          src={loginLogo}
+          alt="XSCALE AI"
+          className={`max-h-[80px] ${isCustomLogo ? "rounded-lg" : ""}`}
+          style={{ objectFit: "contain" }}
+        />
+        <div className="mt-6 rounded-2xl border border-cyan-400/20 bg-theme-bg-secondary/80 light:bg-white/90 backdrop-blur-xl shadow-[0_24px_60px_-20px_rgba(6,182,212,0.35)]">
+          {mode === "single" ? <SingleUserAuth /> : <MultiUserAuth />}
+        </div>
+      </div>
     </div>
   );
 }

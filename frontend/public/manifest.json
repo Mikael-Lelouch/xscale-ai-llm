@@ -1,12 +1,15 @@
 {
-  "name": "AnythingLLM",
-  "short_name": "AnythingLLM",
+  "name": "XSCALE AI",
+  "short_name": "XSCALE AI",
   "display": "standalone",
   "orientation": "portrait",
+  "theme_color": "#0a0e1a",
+  "background_color": "#0a0e1a",
   "start_url": "/",
   "icons": [
     {
-      "src": "/favicon.png",
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
       "sizes": "any"
     }
   ]

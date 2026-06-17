@@ -45,7 +45,19 @@ export default {
         warn: "#854708",
         success: "#05603A",
         darker: "#F4F4F4",
-        teal: "#0BA5EC",
+        teal: "#14b8a6",
+
+        // XSCALE AI brand palette
+        xscale: {
+          cyan: "#06b6d4",
+          "cyan-bright": "#22d3ee",
+          "cyan-deep": "#0891b2",
+          teal: "#14b8a6",
+          amber: "#ffb867",
+          night: "#0a0e1a",
+          "night-2": "#0f1422",
+          "night-3": "#161b23",
+        },
 
         // Generic theme colors
         theme: {
@@ -157,27 +169,31 @@ export default {
       },
       backgroundImage: {
         "preference-gradient":
-          "linear-gradient(180deg, #5A5C63 0%, rgba(90, 92, 99, 0.28) 100%);",
+          "linear-gradient(180deg, #1a2233 0%, rgba(15, 20, 34, 0.28) 100%);",
         "chat-msg-user-gradient":
-          "linear-gradient(180deg, #3D4147 0%, #2C2F35 100%);",
+          "linear-gradient(180deg, #16203a 0%, #0f1830 100%);",
         "selected-preference-gradient":
-          "linear-gradient(180deg, #313236 0%, rgba(63.40, 64.90, 70.13, 0) 100%);",
-        "main-gradient": "linear-gradient(180deg, #3D4147 0%, #2C2F35 100%)",
-        "modal-gradient": "linear-gradient(180deg, #3D4147 0%, #2C2F35 100%)",
-        "sidebar-gradient": "linear-gradient(90deg, #5B616A 0%, #3F434B 100%)",
-        "login-gradient": "linear-gradient(180deg, #3D4147 0%, #2C2F35 100%)",
+          "linear-gradient(180deg, #122733 0%, rgba(6, 182, 212, 0) 100%);",
+        "main-gradient": "linear-gradient(180deg, #0f1422 0%, #0a0e1a 100%)",
+        "modal-gradient": "linear-gradient(180deg, #0f1422 0%, #0a0e1a 100%)",
+        "sidebar-gradient": "linear-gradient(90deg, #06b6d4 0%, #14b8a6 100%)",
+        "login-gradient":
+          "radial-gradient(120% 120% at 50% 0%, #0f1c33 0%, #0a0e1a 60%)",
         "menu-item-gradient":
-          "linear-gradient(90deg, #3D4147 0%, #2C2F35 100%)",
+          "linear-gradient(90deg, #0f1422 0%, #0a0e1a 100%)",
         "menu-item-selected-gradient":
-          "linear-gradient(90deg, #5B616A 0%, #3F434B 100%)",
+          "linear-gradient(90deg, rgba(6, 182, 212, 0.22) 0%, rgba(20, 184, 166, 0.16) 100%)",
         "workspace-item-gradient":
-          "linear-gradient(90deg, #3D4147 0%, #2C2F35 100%)",
+          "linear-gradient(90deg, #0f1422 0%, #0a0e1a 100%)",
         "workspace-item-selected-gradient":
-          "linear-gradient(90deg, #5B616A 0%, #3F434B 100%)",
-        "switch-selected": "linear-gradient(146deg, #5B616A 0%, #3F434B 100%)"
+          "linear-gradient(90deg, rgba(6, 182, 212, 0.22) 0%, rgba(20, 184, 166, 0.16) 100%)",
+        "switch-selected": "linear-gradient(146deg, #06b6d4 0%, #14b8a6 100%)",
+        "xscale-brand-gradient":
+          "linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%)"
       },
       fontFamily: {
         sans: [
+          "Inter",
           "plus-jakarta-sans",
           "ui-sans-serif",
           "system-ui",
@@ -193,6 +209,13 @@ export default {
           '"Segoe UI Emoji"',
           '"Segoe UI Symbol"',
           '"Noto Color Emoji"'
+        ],
+        display: [
+          "Orbitron",
+          "Inter",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif"
         ]
       },
       animation: {

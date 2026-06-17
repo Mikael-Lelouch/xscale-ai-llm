@@ -297,7 +297,7 @@ export default function MultiUserAuth() {
               </h3>
             </div>
             <p className="text-zinc-400 light:text-zinc-600 text-sm text-center">
-              {t("login.sign-in", { appName: customAppName || "AnythingLLM" })}
+              {t("login.sign-in", { appName: customAppName || "XSCALE AI" })}
             </p>
           </div>
         </div>
@@ -334,7 +334,7 @@ export default function MultiUserAuth() {
           <button
             disabled={loading}
             type="submit"
-            className="text-zinc-950 bg-white hover:bg-zinc-300 light:bg-sky-200 light:text-slate-950 light:hover:bg-sky-300 text-sm font-semibold rounded-lg border-primary-button h-[34px] w-full"
+            className="text-white bg-xscale-brand-gradient hover:opacity-90 transition-opacity disabled:opacity-60 text-sm font-semibold rounded-lg h-[34px] w-full shadow-[0_8px_24px_-8px_rgba(6,182,212,0.6)]"
           >
             {loading
               ? t("login.multi-user.validating")
