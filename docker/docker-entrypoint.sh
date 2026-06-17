@@ -16,9 +16,11 @@ if [ -z "$STORAGE_DIR" ]; then
     echo "================================================================"
 fi
 
-# Ensure the SQLite database directory exists (prisma schema uses file:../storage/anythingllm.db)
-# Path is relative to the schema file at /app/server/prisma/schema.prisma → /app/server/storage/
-mkdir -p /app/server/storage/
+# Prisma schema resolves to /app/server/storage regardless of STORAGE_DIR.
+# When Coolify mounts a volume here, the directory may be root-owned.
+# We ensure it exists and is writable (ignore errors if already correct).
+mkdir -p /app/server/storage 2>/dev/null || true
+chmod 775 /app/server/storage 2>/dev/null || true
 
 {
   cd /app/server/ &&

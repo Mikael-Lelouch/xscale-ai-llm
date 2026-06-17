@@ -192,6 +192,11 @@ FROM backend-build AS production-build
 WORKDIR /app
 COPY --chown=anythingllm:anythingllm --from=frontend-build /app/frontend/dist /app/server/public
 
+# Pre-create the storage directory with correct ownership so it survives volume mounts.
+# Must run as root so the directory exists in the image layer before USER anythingllm.
+USER root
+RUN mkdir -p /app/server/storage && chown -R anythingllm:anythingllm /app/server/storage
+
 # Setup the environment
 ENV NODE_ENV=production
 ENV ANYTHING_LLM_RUNTIME=docker
@@ -199,7 +204,10 @@ ENV DEPLOYMENT_VERSION=1.14.1
 
 # Setup the healthcheck
 HEALTHCHECK --interval=1m --timeout=10s --start-period=1m \
-  CMD /bin/bash /usr/local/bin/docker-healthcheck.sh || exit 1
+  CMD /bin/bash /usr/local/bin/docker-entrypoint.sh || exit 1
+
+# Drop back to non-root for runtime
+USER anythingllm
 
 # Run the server
 # CMD ["sh", "-c", "tail -f /dev/null"] # For development: keep container open
