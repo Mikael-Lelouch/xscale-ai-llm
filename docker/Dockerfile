@@ -140,8 +140,16 @@ WORKDIR /app
 # The output (static HTML/CSS/JS) is platform-independent.
 FROM --platform=$BUILDPLATFORM node:18-slim AS frontend-build
 WORKDIR /app/frontend
+
+# Configure yarn for robust network handling
+ENV YARN_NETWORK_TIMEOUT=600000
+ENV YARN_MAX_RETRIES=10
+ENV npm_config_fetch_timeout=600000
+ENV npm_config_fetch_retry_mintimeout=20000
+ENV npm_config_fetch_retry_maxtimeout=120000
+
 COPY ./frontend/package.json ./frontend/yarn.lock ./
-RUN yarn install --network-timeout 100000 && yarn cache clean
+RUN yarn install --network-timeout 600000 && yarn cache clean
 COPY ./frontend/ ./
 RUN yarn build
 WORKDIR /app
@@ -151,14 +159,30 @@ WORKDIR /app
 FROM build AS backend-build
 COPY --chown=anythingllm:anythingllm ./server /app/server/
 WORKDIR /app/server
-RUN yarn install --production --network-timeout 100000 && yarn cache clean
+
+# Configure yarn for robust network handling (ripgrep download reliability)
+ENV YARN_NETWORK_TIMEOUT=600000
+ENV YARN_MAX_RETRIES=10
+ENV npm_config_fetch_timeout=600000
+ENV npm_config_fetch_retry_mintimeout=20000
+ENV npm_config_fetch_retry_maxtimeout=120000
+
+RUN yarn install --production --network-timeout 600000 && yarn cache clean
 WORKDIR /app
 
 # Install collector dependencies
 COPY --chown=anythingllm:anythingllm ./collector/ ./collector/
 WORKDIR /app/collector
+
+# Configure yarn for robust network handling
 ENV PUPPETEER_DOWNLOAD_BASE_URL=https://storage.googleapis.com/chrome-for-testing-public
-RUN yarn install --production --network-timeout 100000 && yarn cache clean
+ENV YARN_NETWORK_TIMEOUT=600000
+ENV YARN_MAX_RETRIES=10
+ENV npm_config_fetch_timeout=600000
+ENV npm_config_fetch_retry_mintimeout=20000
+ENV npm_config_fetch_retry_maxtimeout=120000
+
+RUN yarn install --production --network-timeout 600000 && yarn cache clean
 
 WORKDIR /app
 USER anythingllm
