@@ -61,6 +61,15 @@ const router = createBrowserRouter([
           return { element: <InvitePage /> };
         },
       },
+      {
+        path: "/local-deployment",
+        lazy: async () => {
+          const { default: LocalDeployment } = await import(
+            "@/pages/LocalDeployment"
+          );
+          return { element: <LocalDeployment /> };
+        },
+      },
       // Admin routes
       {
         path: "/settings/llm-preference",
@@ -123,6 +132,17 @@ const router = createBrowserRouter([
           );
           return {
             element: <AdminRoute Component={GeneralVectorDatabase} />,
+          };
+        },
+      },
+      {
+        path: "/settings/local-models",
+        lazy: async () => {
+          const { default: LocalModels } = await import(
+            "@/pages/GeneralSettings/LocalModels"
+          );
+          return {
+            element: <AdminRoute Component={LocalModels} />,
           };
         },
       },

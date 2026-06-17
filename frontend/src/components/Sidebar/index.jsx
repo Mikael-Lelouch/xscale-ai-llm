@@ -15,17 +15,27 @@ import { useSidebarToggle, ToggleSidebarButton } from "./SidebarToggle";
 import SearchBox from "./SearchBox";
 import { Tooltip } from "react-tooltip";
 import { createPortal } from "react-dom";
+import SovereigntyBadge, { useDeploymentMode } from "../SovereigntyBadge";
 
 export default function Sidebar() {
   const { user } = useUser();
   const { logo } = useLogo();
   const sidebarRef = useRef(null);
   const { showSidebar, setShowSidebar, canToggleSidebar } = useSidebarToggle();
+  const [deploymentMode, setDeploymentMode] = useState("cloud-us");
   const {
     showing: showingNewWsModal,
     showModal: showNewWsModal,
     hideModal: hideNewWsModal,
   } = useNewWorkspaceModal();
+
+  useEffect(() => {
+    async function detectMode() {
+      const detectedMode = await useDeploymentMode();
+      setDeploymentMode(detectedMode);
+    }
+    detectMode();
+  }, []);
 
   return (
     <>
@@ -66,8 +76,16 @@ export default function Sidebar() {
                     <ActiveWorkspaces />
                   </div>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 pb-3 rounded-b-[16px] bg-theme-bg-sidebar light:bg-slate-200 bg-opacity-80 backdrop-filter backdrop-blur-md z-10">
+                <div className="absolute bottom-0 left-0 right-0 pb-3 px-3 rounded-b-[16px] bg-theme-bg-sidebar light:bg-slate-200 bg-opacity-80 backdrop-filter backdrop-blur-md z-10 flex items-center justify-between">
                   <Footer />
+                  <div className={`transition-opacity duration-500 ${showSidebar ? "opacity-100" : "opacity-0"}`}>
+                    <SovereigntyBadge
+                      mode={deploymentMode}
+                      size="sm"
+                      showTooltip={true}
+                      className="flex-shrink-0"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

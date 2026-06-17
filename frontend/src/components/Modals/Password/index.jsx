@@ -8,11 +8,27 @@ import {
   AUTH_TIMESTAMP,
 } from "../../../utils/constants";
 import useLogo from "../../../hooks/useLogo";
+import SovereigntyBadge, { useDeploymentMode } from "../../SovereigntyBadge";
 
 export default function PasswordModal({ mode = "single" }) {
   const { loginLogo, isCustomLogo } = useLogo();
+  const [deploymentMode, setDeploymentMode] = useState("cloud-us");
+
+  useEffect(() => {
+    async function detectMode() {
+      const detectedMode = await useDeploymentMode();
+      setDeploymentMode(detectedMode);
+    }
+    detectMode();
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-login-gradient light:bg-slate-50 flex flex-col items-center justify-center overflow-hidden">
+      {/* Sovereignty Badge - Top Right */}
+      <div className="fixed top-6 right-6 z-20">
+        <SovereigntyBadge mode={deploymentMode} size="sm" showTooltip={true} />
+      </div>
+
       {/* XSCALE ambient glow - enhanced */}
       <div
         aria-hidden="true"
