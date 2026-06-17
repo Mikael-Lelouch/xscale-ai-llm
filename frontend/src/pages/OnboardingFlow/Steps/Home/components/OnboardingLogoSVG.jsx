@@ -58,19 +58,19 @@ export function OnboardingLogoSVG() {
         >
           {isLight ? (
             <>
-              <stop stopColor="#B0BAC5" />
-              <stop offset="0.538462" stopColor="#FFFFFF" stopOpacity="0.4" />
-              <stop offset="1" stopColor="#A8B0BE" />
+              <stop stopColor="#0891b2" />
+              <stop offset="0.538462" stopColor="#22d3ee" stopOpacity="0.4" />
+              <stop offset="1" stopColor="#0d9488" />
             </>
           ) : (
             <>
-              <stop stopColor="#3C5769" />
+              <stop stopColor="#06b6d4" />
               <stop
                 offset="0.538462"
-                stopColor="#9FA5C2"
+                stopColor="#22d3ee"
                 stopOpacity="0.253846"
               />
-              <stop offset="1" stopColor="#40435E" />
+              <stop offset="1" stopColor="#14b8a6" />
             </>
           )}
         </linearGradient>
