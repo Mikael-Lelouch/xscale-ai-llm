@@ -27,14 +27,22 @@ class MetaGenerator {
   #customConfig = null;
 
   #defaultManifest = {
-    name: "AnythingLLM",
-    short_name: "AnythingLLM",
+    name: "XSCALE AI",
+    short_name: "XSCALE AI",
     display: "standalone",
     orientation: "portrait",
+    theme_color: "#0a0e1a",
+    background_color: "#0a0e1a",
     start_url: "/",
     icons: [
       {
+        src: "/favicon.svg",
+        type: "image/svg+xml",
+        sizes: "any",
+      },
+      {
         src: "/favicon.png",
+        type: "image/png",
         sizes: "any",
       },
     ],
@@ -53,27 +61,28 @@ class MetaGenerator {
     return [
       {
         tag: "link",
-        props: { type: "image/svg+xml", href: "/favicon.png" },
+        props: { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
         content: null,
       },
       {
         tag: "title",
         props: null,
-        content: "AnythingLLM | Your personal LLM trained on anything",
+        content: "XSCALE AI | Your private AI workspace",
       },
 
       {
         tag: "meta",
         props: {
           name: "title",
-          content: "AnythingLLM | Your personal LLM trained on anything",
+          content: "XSCALE AI | Your private AI workspace",
         },
       },
       {
         tag: "meta",
         props: {
-          description: "title",
-          content: "AnythingLLM | Your personal LLM trained on anything",
+          name: "description",
+          content:
+            "XSCALE AI — the secure, multi-user AI workspace by XSCALE Technologies.",
         },
       },
 
@@ -81,28 +90,21 @@ class MetaGenerator {
       { tag: "meta", props: { property: "og:type", content: "website" } },
       {
         tag: "meta",
-        props: { property: "og:url", content: "https://anythingllm.com" },
+        props: { property: "og:url", content: "https://xscale.ai" },
       },
       {
         tag: "meta",
         props: {
           property: "og:title",
-          content: "AnythingLLM | Your personal LLM trained on anything",
+          content: "XSCALE AI | Your private AI workspace",
         },
       },
       {
         tag: "meta",
         props: {
           property: "og:description",
-          content: "AnythingLLM | Your personal LLM trained on anything",
-        },
-      },
-      {
-        tag: "meta",
-        props: {
-          property: "og:image",
           content:
-            "https://raw.githubusercontent.com/Mintplex-Labs/anything-llm/master/images/promo.png",
+            "XSCALE AI — the secure, multi-user AI workspace by XSCALE Technologies.",
         },
       },
 
@@ -113,32 +115,28 @@ class MetaGenerator {
       },
       {
         tag: "meta",
-        props: { property: "twitter:url", content: "https://anythingllm.com" },
+        props: { property: "twitter:url", content: "https://xscale.ai" },
       },
       {
         tag: "meta",
         props: {
           property: "twitter:title",
-          content: "AnythingLLM | Your personal LLM trained on anything",
+          content: "XSCALE AI | Your private AI workspace",
         },
       },
       {
         tag: "meta",
         props: {
           property: "twitter:description",
-          content: "AnythingLLM | Your personal LLM trained on anything",
-        },
-      },
-      {
-        tag: "meta",
-        props: {
-          property: "twitter:image",
           content:
-            "https://raw.githubusercontent.com/Mintplex-Labs/anything-llm/master/images/promo.png",
+            "XSCALE AI — the secure, multi-user AI workspace by XSCALE Technologies.",
         },
       },
 
-      { tag: "link", props: { rel: "icon", href: "/favicon.png" } },
+      {
+        tag: "link",
+        props: { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      },
       { tag: "link", props: { rel: "apple-touch-icon", href: "/favicon.png" } },
 
       // PWA specific tags
@@ -229,7 +227,7 @@ class MetaGenerator {
             props: null,
             content:
               customTitle ??
-              "AnythingLLM | Your personal LLM trained on anything",
+              "XSCALE AI | Your private AI workspace",
           };
         }
         // Override meta title
@@ -240,7 +238,7 @@ class MetaGenerator {
               name: "title",
               content:
                 customTitle ??
-                "AnythingLLM | Your personal LLM trained on anything",
+                "XSCALE AI | Your private AI workspace",
             },
           };
         }
@@ -252,7 +250,7 @@ class MetaGenerator {
               property: "og:title",
               content:
                 customTitle ??
-                "AnythingLLM | Your personal LLM trained on anything",
+                "XSCALE AI | Your private AI workspace",
             },
           };
         }
@@ -264,7 +262,7 @@ class MetaGenerator {
               property: "twitter:title",
               content:
                 customTitle ??
-                "AnythingLLM | Your personal LLM trained on anything",
+                "XSCALE AI | Your private AI workspace",
             },
           };
         }
@@ -310,6 +308,10 @@ class MetaGenerator {
           <head>
             <meta charset="UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <meta name="theme-color" content="#0a0e1a" />
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&display=swap" rel="stylesheet">
             ${this.#assembleMeta()}
             <script type="module" crossorigin src="/index.js"></script>
             <link rel="stylesheet" href="/index.css">
@@ -330,7 +332,7 @@ class MetaGenerator {
       const { SystemSettings } = require("../../models/systemSettings");
       const manifestName = await SystemSettings.getValueOrFallback(
         { label: "meta_page_title" },
-        "AnythingLLM"
+        "XSCALE AI"
       );
       const faviconURL = await SystemSettings.getValueOrFallback(
         { label: "meta_page_favicon" },
@@ -352,8 +354,15 @@ class MetaGenerator {
         short_name: manifestName,
         display: "standalone",
         orientation: "portrait",
+        theme_color: "#0a0e1a",
+        background_color: "#0a0e1a",
         start_url: "/",
         icons: [
+          {
+            src: "/favicon.svg",
+            type: "image/svg+xml",
+            sizes: "any",
+          },
           {
             src: iconUrl,
             sizes: "any",

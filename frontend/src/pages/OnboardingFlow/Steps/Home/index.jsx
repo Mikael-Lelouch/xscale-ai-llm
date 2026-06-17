@@ -30,7 +30,10 @@ export default function OnboardingHome() {
 
       <div className="relative z-10 flex justify-center pt-[58px]">
         <p className="font-display text-white/90 light:text-slate-700 text-3xl font-semibold tracking-[0.12em]">
-          XSCALE <span className="text-xscale-cyan-bright light:text-xscale-cyan-deep">AI</span>
+          XSCALE{" "}
+          <span className="text-xscale-cyan-bright light:text-xscale-cyan-deep">
+            AI
+          </span>
         </p>
       </div>
 
