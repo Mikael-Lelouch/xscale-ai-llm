@@ -138,6 +138,9 @@ export default {
     vectorDatabase: () => {
       return "/settings/vector-database";
     },
+    localModels: () => {
+      return "/settings/local-models";
+    },
     security: () => {
       return "/settings/security";
     },

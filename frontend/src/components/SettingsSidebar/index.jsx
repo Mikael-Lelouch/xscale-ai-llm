@@ -263,6 +263,12 @@ const SidebarOptions = ({ user = null, t }) => (
               flex: true,
               roles: ["admin"],
             },
+            {
+              btnText: t("settings.local-models"),
+              href: paths.settings.localModels(),
+              flex: true,
+              roles: ["admin"],
+            },
           ]}
         />
         <Option
