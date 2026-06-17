@@ -16,6 +16,10 @@ if [ -z "$STORAGE_DIR" ]; then
     echo "================================================================"
 fi
 
+# Ensure the SQLite database directory exists (prisma schema uses file:../storage/anythingllm.db)
+# Path is relative to the schema file at /app/server/prisma/schema.prisma → /app/server/storage/
+mkdir -p /app/server/storage/
+
 {
   cd /app/server/ &&
     # Disable Prisma CLI telemetry (https://www.prisma.io/docs/orm/tools/prisma-cli#how-to-opt-out-of-data-collection)
