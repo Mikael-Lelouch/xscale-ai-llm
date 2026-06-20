@@ -37,6 +37,9 @@ model workspace_documents {
   lastUpdatedAt        DateTime              @default(now())
   workspace            workspaces            @relation(fields: [workspaceId], references: [id])
   document_sync_queues document_sync_queues?
+
+  @@index([workspaceId])
+  @@index([workspaceId, createdAt])
 }
 
 model invites {

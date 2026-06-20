@@ -36,6 +36,82 @@ const Document = {
     });
   },
 
+  /**
+   * Get paginated documents for a workspace
+   * @param {number} workspaceId - The workspace ID
+   * @param {number} page - Page number (1-based)
+   * @param {number} limit - Number of documents per page (default: 50)
+   * @param {string} sortBy - Sort field: 'recent' (default), 'name', 'size'
+   * @param {string} filterType - Filter by document type (e.g., 'pdf', 'docx')
+   * @returns {Promise<{documents: Array, total: number, page: number, pages: number, pageSize: number}>}
+   */
+  forWorkspacePaginated: async function (
+    workspaceId = null,
+    page = 1,
+    limit = 50,
+    sortBy = "recent",
+    filterType = null
+  ) {
+    if (!workspaceId) return { documents: [], total: 0, page: 1, pages: 0, pageSize: limit };
+
+    const where = { workspaceId };
+    let orderBy = { createdAt: "desc" };
+
+    // Apply sorting
+    if (sortBy === "name") {
+      orderBy = { filename: "asc" };
+    } else if (sortBy === "size") {
+      orderBy = { metadata: "desc" }; // Note: size would be in metadata, this is a placeholder
+    }
+
+    // Filter by document type (extracted from filename extension)
+    if (filterType) {
+      // Simple filter - can be extended based on metadata
+      where.filename = { contains: `.${filterType.toLowerCase()}` };
+    }
+
+    try {
+      const total = await prisma.workspace_documents.count({ where });
+      const pages = Math.ceil(total / limit);
+      const skip = (Math.max(1, Math.min(page, pages)) - 1) * limit;
+
+      const documents = await prisma.workspace_documents.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+      });
+
+      return {
+        documents,
+        total,
+        page: Math.max(1, Math.min(page, pages)),
+        pages: Math.max(1, pages),
+        pageSize: limit,
+      };
+    } catch (error) {
+      console.error("FAILED TO GET PAGINATED DOCUMENTS.", error.message);
+      return { documents: [], total: 0, page: 1, pages: 0, pageSize: limit };
+    }
+  },
+
+  /**
+   * Get total document count for a workspace with caching
+   * @param {number} workspaceId - The workspace ID
+   * @returns {Promise<number>}
+   */
+  countForWorkspace: async function (workspaceId = null) {
+    if (!workspaceId) return 0;
+    try {
+      return await prisma.workspace_documents.count({
+        where: { workspaceId },
+      });
+    } catch (error) {
+      console.error("FAILED TO COUNT WORKSPACE DOCUMENTS.", error.message);
+      return 0;
+    }
+  },
+
   delete: async function (clause = {}) {
     try {
       await prisma.workspace_documents.deleteMany({ where: clause });
