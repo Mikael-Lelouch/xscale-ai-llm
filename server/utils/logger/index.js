@@ -95,6 +95,7 @@ class Logger {
     };
     return logger;
   }
+}
 
 /**
  * Sets and overrides Console methods for logging when called.

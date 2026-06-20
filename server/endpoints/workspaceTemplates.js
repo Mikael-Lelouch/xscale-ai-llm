@@ -265,4 +265,8 @@ router.post(
   }
 );
 
-module.exports = { router };
+function workspaceTemplateEndpoints(app) {
+  app.use("/v1/workspace-templates", router);
+}
+
+module.exports = { workspaceTemplateEndpoints };

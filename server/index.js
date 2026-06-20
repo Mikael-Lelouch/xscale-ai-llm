@@ -46,6 +46,7 @@ const {
 } = require("./endpoints/utils/googleAgentSkillEndpoints");
 const { memoryEndpoints } = require("./endpoints/memory");
 const { billingEndpoints } = require("./endpoints/billing");
+const { workspaceTemplateEndpoints } = require("./endpoints/workspaceTemplates");
 const { httpLogger } = require("./middleware/httpLogger");
 const app = express();
 const apiRouter = express.Router();
@@ -82,6 +83,7 @@ app.use("/api", apiRouter);
 systemEndpoints(apiRouter);
 extensionEndpoints(apiRouter);
 workspaceEndpoints(apiRouter);
+workspaceTemplateEndpoints(apiRouter);
 workspaceThreadEndpoints(apiRouter);
 chatEndpoints(apiRouter);
 adminEndpoints(apiRouter);
