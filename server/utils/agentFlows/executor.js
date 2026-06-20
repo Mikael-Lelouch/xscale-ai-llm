@@ -11,12 +11,55 @@ class FlowExecutor {
     this.introspect = (...args) => console.log("[introspect] ", ...args);
     this.logger = console.info;
     this.aibitat = null;
+    this.executionId = null;
+    this.streamCallback = null;
   }
 
   attachLogging(introspectFn = null, loggerFn = null) {
     this.introspect =
       introspectFn || ((...args) => console.log("[introspect] ", ...args));
     this.logger = loggerFn || console.info;
+  }
+
+  /**
+   * Attach execution context for database persistence and streaming
+   * @param {number} executionId - The execution ID for tracking
+   * @param {Function} streamCallback - Callback to stream results (optional)
+   */
+  attachExecutionContext(executionId, streamCallback = null) {
+    this.executionId = executionId;
+    this.streamCallback = streamCallback;
+  }
+
+  /**
+   * Stream a step result to the client
+   * @param {number} stepIndex - Index of the step
+   * @param {Object} step - The step configuration
+   * @param {any} result - The result data
+   * @param {boolean} success - Whether step succeeded
+   * @param {string} error - Optional error message
+   */
+  async streamStepResult(stepIndex, step, result, success, error = null) {
+    if (!this.streamCallback) return;
+
+    const response = {
+      id: this.executionId,
+      type: success ? "stepComplete" : "stepError",
+      stepIndex,
+      stepName: step.name || `Step ${stepIndex}`,
+      stepType: step.type,
+      data: result,
+      variables: this.variables,
+      success,
+      error: error,
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      await this.streamCallback(response);
+    } catch (err) {
+      console.error("Failed to stream step result:", err);
+    }
   }
 
   /**
@@ -130,17 +173,21 @@ class FlowExecutor {
   /**
    * Executes a single step of the flow
    * @param {Object} step - The step to execute
+   * @param {number} stepIndex - Index of the step in the flow
    * @returns {Promise<Object>} The result of the step
    */
-  async executeStep(step) {
+  async executeStep(step, stepIndex = 0) {
     const config = this.replaceVariables(step.config);
     let result;
     // Create execution context with introspect
     const context = {
+      executionId: this.executionId,
+      stepIndex,
       introspect: this.introspect,
       variables: this.variables,
       logger: this.logger,
       aibitat: this.aibitat,
+      streamCallback: this.streamCallback,
     };
 
     switch (step.type) {
@@ -202,9 +249,10 @@ class FlowExecutor {
     const results = [];
     let directOutputResult = null;
 
-    for (const step of flow.config.steps) {
+    for (let i = 0; i < flow.config.steps.length; i++) {
+      const step = flow.config.steps[i];
       try {
-        const result = await this.executeStep(step);
+        const result = await this.executeStep(step, i);
 
         // If the step has directOutput, stop processing and return the result
         // so that no other steps are executed or processed
@@ -213,9 +261,80 @@ class FlowExecutor {
           break;
         }
 
-        results.push({ success: true, result });
+        results.push({ success: true, result, stepType: step.type });
       } catch (error) {
-        results.push({ success: false, error: error.message });
+        results.push({
+          success: false,
+          error: error.message,
+          stepType: step.type,
+        });
+        break;
+      }
+    }
+
+    return {
+      success: results.every((r) => r.success),
+      results,
+      variables: this.variables,
+      directOutput: directOutputResult,
+    };
+  }
+
+  /**
+   * Execute flow with streaming support for real-time updates
+   * @param {Object} flow - The flow to execute
+   * @param {Object} initialVariables - Initial variables for the flow
+   * @param {Object} aibitat - The aibitat instance
+   * @param {number} executionId - The execution ID for tracking
+   * @param {Function} streamCallback - Callback to stream results
+   * @returns {Promise<Object>} Flow execution result
+   */
+  async executeFlowWithStreaming(
+    flow,
+    initialVariables = {},
+    aibitat = null,
+    executionId = null,
+    streamCallback = null
+  ) {
+    // Attach execution context
+    this.attachExecutionContext(executionId, streamCallback);
+
+    // Initialize variables
+    this.variables = {
+      ...(
+        flow.config.steps.find((s) => s.type === "start")?.config?.variables ||
+        []
+      ).reduce((acc, v) => ({ ...acc, [v.name]: v.value }), {}),
+      ...initialVariables,
+    };
+
+    this.aibitat = aibitat;
+    this.attachLogging(aibitat?.introspect, aibitat?.handlerProps?.log);
+
+    const results = [];
+    let directOutputResult = null;
+
+    for (let i = 0; i < flow.config.steps.length; i++) {
+      const step = flow.config.steps[i];
+      try {
+        const result = await this.executeStep(step, i);
+
+        // If the step has directOutput, stop processing
+        if (result?.directOutput) {
+          directOutputResult = result.result;
+          await this.streamStepResult(i, step, result.result, true);
+          break;
+        }
+
+        results.push({ success: true, result, stepType: step.type });
+        await this.streamStepResult(i, step, result, true);
+      } catch (error) {
+        results.push({
+          success: false,
+          error: error.message,
+          stepType: step.type,
+        });
+        await this.streamStepResult(i, step, null, false, error.message);
         break;
       }
     }
