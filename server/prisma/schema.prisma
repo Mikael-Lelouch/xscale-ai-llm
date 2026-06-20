@@ -90,6 +90,7 @@ model users {
   desktop_mobile_devices       desktop_mobile_devices[]
   workspace_parsed_files       workspace_parsed_files[]
   memories                     memories[]
+  agent_flow_executions        agent_flow_executions[]
 }
 
 model recovery_codes {
@@ -500,4 +501,26 @@ model model_router_rules {
   @@unique([router_id, title])
   @@index([router_id])
   @@index([router_id, enabled, priority])
+}
+
+model agent_flow_executions {
+  id            Int        @id @default(autoincrement())
+  flowUuid      String
+  flowName      String
+  status        String     @default("pending")
+  startedAt     DateTime   @default(now())
+  completedAt   DateTime?
+  variables     String     @default("{}")
+  results       String     @default("[]")
+  error         String?
+  createdBy     Int?
+  metadata      String     @default("{}")
+  createdAt     DateTime   @default(now())
+  lastUpdatedAt DateTime   @default(now())
+  user          users?     @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([flowUuid])
+  @@index([status])
+  @@index([createdBy])
+  @@index([startedAt])
 }
