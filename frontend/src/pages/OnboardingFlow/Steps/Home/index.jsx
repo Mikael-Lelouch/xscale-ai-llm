@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import useRedirectToHomeOnOnboardingComplete from "@/hooks/useOnboardingComplete";
 import { OnboardingLogoSVG } from "./components/OnboardingLogoSVG";
-import SovereigntyBadge, { useDeploymentMode } from "@/components/SovereigntyBadge";
+import SovereigntyBadge, { getDeploymentMode } from "@/components/SovereigntyBadge";
 import { useState, useEffect } from "react";
 
 export default function OnboardingHome() {
@@ -14,7 +14,7 @@ export default function OnboardingHome() {
 
   useEffect(() => {
     async function detectMode() {
-      const detectedMode = await useDeploymentMode();
+      const detectedMode = await getDeploymentMode();
       setDeploymentMode(detectedMode);
     }
     detectMode();

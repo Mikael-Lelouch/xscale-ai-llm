@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Tooltip } from "react-tooltip";
-import { Cloud, FlagCheckered } from "@phosphor-icons/react";
 import System from "@/models/system";
 
 /**
@@ -20,7 +19,9 @@ export default function SovereigntyBadge({
   showTooltip = true,
   className = "",
 }) {
-  const badgeId = `sovereignty-badge-${Math.random().toString(36).substr(2, 9)}`;
+  const [badgeId] = useState(
+    `sovereignty-badge-${Math.random().toString(36).substr(2, 9)}`
+  );
 
   const config = {
     local: {
@@ -122,7 +123,7 @@ export default function SovereigntyBadge({
  *
  * @returns {'local' | 'cloud-eu' | 'cloud-us'} Current deployment mode
  */
-export async function useDeploymentMode() {
+export async function getDeploymentMode() {
   const settings = await System.keys();
 
   if (!settings) return "cloud-us";
@@ -150,7 +151,7 @@ export function AutoDetectSovereigntyBadge({ size = "md", className = "" }) {
 
   useEffect(() => {
     async function detectMode() {
-      const detectedMode = await useDeploymentMode();
+      const detectedMode = await getDeploymentMode();
       setMode(detectedMode);
       setLoading(false);
     }

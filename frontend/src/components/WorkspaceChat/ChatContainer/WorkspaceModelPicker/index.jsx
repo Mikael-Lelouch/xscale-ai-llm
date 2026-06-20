@@ -14,7 +14,7 @@ import Workspace from "@/models/workspace";
 import System from "@/models/system";
 import ModelRouterAPI from "@/models/modelRouter";
 import { SIDEBAR_TOGGLE_EVENT } from "@/components/Sidebar/SidebarToggle";
-import SovereigntyBadge, { useDeploymentMode } from "@/components/SovereigntyBadge";
+import SovereigntyBadge, { getDeploymentMode } from "@/components/SovereigntyBadge";
 
 async function resolveModelName(workspace, systemSettings, t) {
   const effectiveProvider =
@@ -74,7 +74,7 @@ export default function WorkspaceModelPicker({ workspaceSlug = null }) {
   // Detect deployment mode
   useEffect(() => {
     async function detectMode() {
-      const detectedMode = await useDeploymentMode();
+      const detectedMode = await getDeploymentMode();
       setDeploymentMode(detectedMode);
     }
     detectMode();
