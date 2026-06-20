@@ -2,7 +2,7 @@ import React from "react";
 import {
   CheckCircle,
   XCircle,
-  ShieldCheckFill,
+  ShieldCheck,
   ClipboardText,
 } from "@phosphor-icons/react";
 
@@ -59,7 +59,7 @@ export default function ComplianceChecklist({ compliance }) {
     <div className="bg-theme-bg-secondary rounded-lg p-8 border border-white/10">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <ShieldCheckFill className="h-6 w-6 text-emerald-400" weight="fill" />
+          <ShieldCheck className="h-6 w-6 text-emerald-400" weight="fill" />
           <h3 className="text-xl font-bold text-theme-text-primary">
             Liste de Conformité RGPD
           </h3>
