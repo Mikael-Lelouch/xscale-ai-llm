@@ -155,3 +155,24 @@ CREATE INDEX "payment_methods_stripe_payment_method_id_idx" ON "payment_methods"
 CREATE INDEX "usage_warnings_workspace_id_idx" ON "usage_warnings"("workspace_id");
 CREATE INDEX "usage_warnings_warning_type_idx" ON "usage_warnings"("warning_type");
 CREATE INDEX "usage_warnings_created_at_idx" ON "usage_warnings"("created_at");
+
+-- Add missing workspace foreign key constraints for cascade delete
+ALTER TABLE "usage_metrics"
+ADD CONSTRAINT "usage_metrics_workspace_id_fkey"
+FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id") ON DELETE CASCADE;
+
+ALTER TABLE "billing_invoices"
+ADD CONSTRAINT "billing_invoices_workspace_id_fkey"
+FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id") ON DELETE CASCADE;
+
+ALTER TABLE "stripe_subscriptions"
+ADD CONSTRAINT "stripe_subscriptions_workspace_id_fkey"
+FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id") ON DELETE CASCADE;
+
+ALTER TABLE "payment_methods"
+ADD CONSTRAINT "payment_methods_workspace_id_fkey"
+FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id") ON DELETE CASCADE;
+
+ALTER TABLE "usage_warnings"
+ADD CONSTRAINT "usage_warnings_workspace_id_fkey"
+FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id") ON DELETE CASCADE;

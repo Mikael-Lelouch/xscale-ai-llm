@@ -265,6 +265,13 @@ router.post(
   }
 );
 
+/**
+ * Registers workspace template endpoints on the provided Express app/router.
+ * Mounts the workspace templates router at the /v1/workspace-templates path.
+ *
+ * @param {express.Router|express.Application} app - Express router or app instance to register endpoints on
+ * @returns {void}
+ */
 function workspaceTemplateEndpoints(app) {
   app.use("/v1/workspace-templates", router);
 }

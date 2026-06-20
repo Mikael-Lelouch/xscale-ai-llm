@@ -128,11 +128,11 @@ export async function getDeploymentMode() {
 
   if (!settings) return "cloud-us";
 
-  const provider = settings?.LLMProvider || "";
+  const provider = String(settings?.LLMProvider ?? "").toLowerCase();
   const isLocal =
-    provider.toLowerCase().includes("ollama") ||
-    provider.toLowerCase().includes("lmstudio") ||
-    provider.toLowerCase().includes("localai");
+    provider.includes("ollama") ||
+    provider.includes("lmstudio") ||
+    provider.includes("localai");
 
   if (isLocal) return "local";
 
