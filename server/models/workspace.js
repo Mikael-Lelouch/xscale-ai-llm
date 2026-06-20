@@ -287,9 +287,9 @@ const Workspace = {
     }
   },
 
-  getWithUser: async function (user = null, clause = {}) {
+  getWithUser: async function (user = null, clause = {}, includeDocuments = true) {
     if ([ROLES.admin, ROLES.manager].includes(user.role))
-      return this.get(clause);
+      return this.get(clause, includeDocuments);
 
     try {
       const workspace = await prisma.workspaces.findFirst({
@@ -303,15 +303,21 @@ const Workspace = {
         },
         include: {
           workspace_users: true,
-          documents: true,
+          documents: includeDocuments ? true : false,
         },
       });
 
       if (!workspace) return null;
 
+      // Load documents separately if needed (for lazy loading optimization)
+      let documents = [];
+      if (includeDocuments) {
+        documents = await Document.forWorkspace(workspace.id);
+      }
+
       return {
         ...workspace,
-        documents: await Document.forWorkspace(workspace.id),
+        documents,
         contextWindow: this._getContextWindow(workspace),
         currentContextTokenCount: await this._getCurrentContextTokenCount(
           workspace.id
@@ -359,18 +365,26 @@ const Workspace = {
     return LLMProvider?.promptWindowLimit?.(model) || null;
   },
 
-  get: async function (clause = {}) {
+  get: async function (clause = {}, includeDocuments = true) {
     try {
       const workspace = await prisma.workspaces.findFirst({
         where: clause,
         include: {
-          documents: true,
+          documents: includeDocuments ? true : false,
         },
       });
 
       if (!workspace) return null;
+
+      // Load documents separately if needed (for lazy loading optimization)
+      let documents = [];
+      if (includeDocuments) {
+        documents = await Document.forWorkspace(workspace.id);
+      }
+
       return {
         ...workspace,
+        documents,
         contextWindow: this._getContextWindow(workspace),
         currentContextTokenCount: await this._getCurrentContextTokenCount(
           workspace.id
