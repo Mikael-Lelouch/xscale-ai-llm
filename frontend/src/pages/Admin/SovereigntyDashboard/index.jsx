@@ -4,7 +4,7 @@ import { isMobile } from "react-device-detect";
 import {
   ShieldCheck,
   DownloadSimple,
-  ArrowPathRoundedSquare,
+  ArrowClockwise,
 } from "@phosphor-icons/react";
 import Admin from "@/models/admin";
 import StatusCards from "./StatusCards";
@@ -102,7 +102,7 @@ export default function SovereigntyDashboard() {
               disabled={refreshing}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-theme-bg-primary border border-white/10 hover:border-white/20 hover:bg-theme-bg-primary/80 transition-all text-theme-text-primary text-sm font-semibold disabled:opacity-50"
             >
-              <ArrowPathRoundedSquare
+              <ArrowClockwise
                 className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
                 weight="fill"
               />
