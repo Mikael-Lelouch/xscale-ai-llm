@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import {
-  ChevronDown,
+  CaretDown,
   Copy,
   PencilSimple,
   CaretRight,
@@ -79,11 +79,11 @@ export default function ReasoningDisplay({
         onClick={() => onToggleExpanded && onToggleExpanded(!isExpanded)}
         className="flex items-center gap-2 w-full text-left font-semibold text-zinc-200 light:text-slate-900 hover:opacity-80 transition-opacity mb-4"
       >
-        <ChevronDown
+        <CaretDown
           size={18}
           weight="bold"
           className={`transform transition-transform ${
-            !isExpanded ? "-rotate-90" : ""
+            !isExpanded ? "rotate-90" : ""
           }`}
         />
         <span className="text-sm">Processus de raisonnement (CoT)</span>
