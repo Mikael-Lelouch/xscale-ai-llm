@@ -195,6 +195,22 @@ function convertToChatHistory(history = []) {
       continue;
     }
 
+    const assistantMessage = {
+      type: data?.type || "chart",
+      role: "assistant",
+      content: data.text,
+      sources: data.sources || [],
+      chatId: id,
+      sentAt: moment(createdAt).unix(),
+      feedbackScore,
+      metrics: data?.metrics || {},
+      ...(data?.outputs?.length > 0 ? { outputs: data.outputs } : {}),
+      ...(data?.clarifyingQuestions?.length > 0
+        ? { clarifyingQuestions: data.clarifyingQuestions }
+        : {}),
+      ...(data?.reasoning ? { reasoning: data.reasoning } : {}),
+    };
+
     formattedHistory.push([
       {
         role: "user",
@@ -203,20 +219,7 @@ function convertToChatHistory(history = []) {
         attachments: data?.attachments ?? [],
         chatId: id,
       },
-      {
-        type: data?.type || "chart",
-        role: "assistant",
-        content: data.text,
-        sources: data.sources || [],
-        chatId: id,
-        sentAt: moment(createdAt).unix(),
-        feedbackScore,
-        metrics: data?.metrics || {},
-        ...(data?.outputs?.length > 0 ? { outputs: data.outputs } : {}),
-        ...(data?.clarifyingQuestions?.length > 0
-          ? { clarifyingQuestions: data.clarifyingQuestions }
-          : {}),
-      },
+      assistantMessage,
     ]);
   }
 
@@ -254,6 +257,97 @@ function formatClarifyingSurveyForPrompt(survey) {
       .join("\n");
   }
   return `<clarifying_questions>\n${body}\n</clarifying_questions>`;
+}
+
+/**
+ * Parses reasoning text into structured steps for CoT visualization
+ * Handles multiple formats: <think> tags, numbered steps, bullet points
+ * @param {string} reasoningText - The raw reasoning text to parse
+ * @returns {Array<{order: number, content: string}>} Array of reasoning steps
+ */
+function parseReasoningSteps(reasoningText = "") {
+  if (!reasoningText || typeof reasoningText !== "string") return [];
+
+  // Remove <think> tags if present
+  const cleanText = reasoningText.replace(/<\/?think>/g, "").trim();
+  if (!cleanText) return [];
+
+  const steps = [];
+
+  // Try to split by numbered patterns first: "1.", "1)", "1:", "(1)", etc.
+  const numberedPattern = /^[\s]*(?:\d+[\.\):]\s*|\(\d+\)\s*)/m;
+  if (numberedPattern.test(cleanText)) {
+    const parts = cleanText.split(/(?=^[\s]*\d+[\.\):]\s*)/m)
+      .filter(p => p.trim().length > 0)
+      .map(part => part.replace(/^[\s]*\d+[\.\):]\s*/, "").trim());
+
+    steps.push(...parts.map((content, idx) => ({
+      order: idx + 1,
+      content,
+      timestamp: moment().unix(),
+    })));
+  } else if (cleanText.includes("\n\n")) {
+    // Try to split by double newlines (paragraph breaks)
+    const paragraphs = cleanText.split(/\n\n+/)
+      .filter(p => p.trim().length > 0)
+      .map(p => p.trim());
+
+    steps.push(...paragraphs.map((content, idx) => ({
+      order: idx + 1,
+      content,
+      timestamp: moment().unix(),
+    })));
+  } else if (cleanText.includes("\n")) {
+    // Split by single newlines
+    const lines = cleanText.split(/\n+/)
+      .filter(p => p.trim().length > 0 && !p.match(/^[-*+]\s+/));
+
+    if (lines.length > 1) {
+      steps.push(...lines.map((content, idx) => ({
+        order: idx + 1,
+        content,
+        timestamp: moment().unix(),
+      })));
+    } else {
+      // Single paragraph, treat as single step
+      steps.push({
+        order: 1,
+        content: cleanText,
+        timestamp: moment().unix(),
+      });
+    }
+  } else {
+    // Single step/chunk
+    steps.push({
+      order: 1,
+      content: cleanText,
+      timestamp: moment().unix(),
+    });
+  }
+
+  return steps;
+}
+
+/**
+ * Enriches a response object with structured reasoning steps from raw reasoning text
+ * @param {Object} response - The response object containing text, sources, etc.
+ * @param {string} reasoningText - Raw reasoning text (from <think> tags or native reasoning)
+ * @returns {Object} Enhanced response object with reasoning field
+ */
+function enrichResponseWithReasoning(response, reasoningText = null) {
+  if (!reasoningText || !response) return response;
+
+  const steps = parseReasoningSteps(reasoningText);
+  if (steps.length === 0) return response;
+
+  return {
+    ...response,
+    reasoning: {
+      enabled: true,
+      steps,
+      raw: reasoningText,
+    },
+  };
 }
 
 /**
@@ -380,4 +474,6 @@ module.exports = {
   clientAbortedHandler,
   formatChatHistory,
   safeJSONStringify,
+  parseReasoningSteps,
+  enrichResponseWithReasoning,
 };

@@ -3,7 +3,7 @@ const { DocumentManager } = require("../DocumentManager");
 const { WorkspaceChats } = require("../../models/workspaceChats");
 const { WorkspaceParsedFiles } = require("../../models/workspaceParsedFiles");
 const { getVectorDbClass, resolveProviderConnector } = require("../helpers");
-const { writeResponseChunk } = require("../helpers/chat/responses");
+const { writeResponseChunk, enrichResponseWithReasoning } = require("../helpers/chat/responses");
 const { grepAgents } = require("./agents");
 const {
   grepCommand,
@@ -22,7 +22,8 @@ async function streamChatWithWorkspace(
   chatMode = "automatic",
   user = null,
   thread = null,
-  attachments = []
+  attachments = [],
+  includeReasoning = null
 ) {
   const uuid = uuidv4();
   const updatedMessage = await grepCommand(message, user);
@@ -256,11 +257,14 @@ async function streamChatWithWorkspace(
   // Compress & Assemble message to ensure prompt passes token limit with room for response
   // and build system messages based on inputs and history.
   // Reuse the system prompt from routing pre-fetch when available.
+  // Determine if reasoning should be included (parameter or workspace default)
+  const shouldIncludeReasoning = includeReasoning ?? workspace?.includeReasoningByDefault ?? false;
   const systemPrompt =
     prefetchedContext?.systemPrompt ??
     (await chatPrompt(workspace, user, {
       prompt: updatedMessage,
       rawHistory,
+      includeReasoning: shouldIncludeReasoning,
     }));
   const messages = await LLMConnector.compressMessages(
     {
@@ -309,16 +313,27 @@ async function streamChatWithWorkspace(
   }
 
   if (completeText?.length > 0) {
+    // Extract and structure reasoning if reasoning mode was enabled
+    let responseData = {
+      text: completeText,
+      sources,
+      type: chatMode,
+      attachments,
+      metrics,
+    };
+
+    // If reasoning was enabled, parse and structure the reasoning steps
+    if (shouldIncludeReasoning && completeText.includes("<think>")) {
+      const thinkMatch = completeText.match(/<think>([\s\S]*?)<\/think>/);
+      if (thinkMatch) {
+        responseData = enrichResponseWithReasoning(responseData, thinkMatch[1]);
+      }
+    }
+
     const { chat } = await WorkspaceChats.new({
       workspaceId: workspace.id,
       prompt: message,
-      response: {
-        text: completeText,
-        sources,
-        type: chatMode,
-        attachments,
-        metrics,
-      },
+      response: responseData,
       threadId: thread?.id || null,
       user,
     });

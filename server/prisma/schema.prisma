@@ -144,6 +144,13 @@ model workspaces {
   queryRefusalResponse         String?
   vectorSearchMode             String?                        @default("default")
   router_id                    Int? // No relation to prevent whole table migration (SQLite limitation)
+
+  // Billing relations (PHASE 5)
+  workspace_tier               workspace_tiers?
+  usage_metrics                usage_metrics[]
+  billing_invoices             billing_invoices[]
+  usage_warnings               usage_warnings[]
+
   workspace_users              workspace_users[]
   documents                    workspace_documents[]
   workspace_suggested_messages workspace_suggested_messages[]
@@ -524,6 +531,193 @@ model model_router_rules {
   @@index([router_id, enabled, priority])
 }
 
+// PHASE 5: Multi-tenant Billing System
+model workspace_tiers {
+  id                    Int                      @id @default(autoincrement())
+  workspace_id          Int                      @unique
+  tier                  String                   @default("free") // free, pro, team, enterprise
+  max_users             Int?                     // null = unlimited
+  max_storage_gb        Int?                     // null = unlimited
+  max_messages_month    Int?                     // null = unlimited
+  max_tokens_month      Int?                     // null = unlimited
+  max_inference_hours   Int?                     // null = unlimited
+  monthly_price         Float                    @default(0)
+  trial_ends_at         DateTime?
+  current_period_start  DateTime                 @default(now())
+  current_period_end    DateTime
+  subscription_id       String?                  // Stripe subscription ID
+  status                String                   @default("active") // active, canceled, past_due, unpaid
+  auto_renew            Boolean                  @default(true)
+  billing_email         String?
+  created_at            DateTime                 @default(now())
+  updated_at            DateTime                 @updatedAt
+
+  workspace             workspaces               @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  usage_metrics         usage_metrics[]
+  billing_invoices      billing_invoices[]
+  stripe_subscriptions  stripe_subscriptions[]
+
+  @@index([workspace_id])
+  @@index([tier])
+  @@index([status])
+}
+
+model usage_metrics {
+  id                    Int                      @id @default(autoincrement())
+  workspace_id          Int
+  workspace_tier_id     Int
+
+  // Counters for this period (month)
+  messages_used         Int                      @default(0)
+  documents_stored_gb   Float                    @default(0.0)
+  active_users          Int                      @default(0)
+  tokens_used           Int                      @default(0)
+  inference_hours       Float                    @default(0.0)
+
+  // Snapshot metadata
+  snapshot_type         String                   @default("daily") // hourly, daily
+  snapshot_date         DateTime                 @default(now())
+
+  // Period tracking
+  billing_period_start  DateTime
+  billing_period_end    DateTime
+
+  created_at            DateTime                 @default(now())
+  updated_at            DateTime                 @updatedAt
+
+  workspace_tier        workspace_tiers          @relation(fields: [workspace_tier_id], references: [id], onDelete: Cascade)
+
+  @@index([workspace_id])
+  @@index([workspace_tier_id])
+  @@index([snapshot_date])
+  @@index([billing_period_start])
+}
+
+model billing_invoices {
+  id                    Int                      @id @default(autoincrement())
+  workspace_id          Int
+  workspace_tier_id     Int
+
+  invoice_number        String                   @unique
+  stripe_invoice_id     String?
+  status                String                   @default("draft") // draft, pending, sent, paid, failed, void
+
+  // Billing details
+  subtotal              Float                    @default(0)
+  tax                   Float                    @default(0)
+  total                 Float                    @default(0)
+  currency              String                   @default("USD")
+
+  // Usage-based charges (overages)
+  overage_messages      Int                      @default(0)
+  overage_storage_gb    Float                    @default(0)
+  overage_amount        Float                    @default(0)
+
+  // Period
+  billing_period_start  DateTime
+  billing_period_end    DateTime
+
+  // Payment tracking
+  issued_at             DateTime                 @default(now())
+  due_date              DateTime?
+  paid_at               DateTime?
+
+  // PDF URL and email
+  pdf_url               String?
+  email_sent_at         DateTime?
+
+  created_at            DateTime                 @default(now())
+  updated_at            DateTime                 @updatedAt
+
+  workspace_tier        workspace_tiers          @relation(fields: [workspace_tier_id], references: [id], onDelete: Cascade)
+
+  @@index([workspace_id])
+  @@index([workspace_tier_id])
+  @@index([status])
+  @@index([issued_at])
+  @@index([billing_period_start])
+}
+
+model stripe_subscriptions {
+  id                    Int                      @id @default(autoincrement())
+  workspace_id          Int
+  workspace_tier_id     Int
+
+  stripe_subscription_id String                  @unique
+  stripe_customer_id    String
+  stripe_product_id     String?
+  stripe_price_id       String?
+
+  status                String                   @default("active") // active, past_due, unpaid, canceled, incomplete
+  current_period_start  DateTime
+  current_period_end    DateTime
+  cancel_at_period_end  Boolean                  @default(false)
+  canceled_at           DateTime?
+
+  // Payment method
+  stripe_payment_method_id String?
+
+  metadata              String?                  // JSON metadata
+
+  created_at            DateTime                 @default(now())
+  updated_at            DateTime                 @updatedAt
+
+  workspace_tier        workspace_tiers          @relation(fields: [workspace_tier_id], references: [id], onDelete: Cascade)
+
+  @@index([workspace_id])
+  @@index([stripe_subscription_id])
+  @@index([stripe_customer_id])
+}
+
+model payment_methods {
+  id                    Int                      @id @default(autoincrement())
+  workspace_id          Int
+
+  stripe_payment_method_id String                @unique
+  stripe_customer_id    String
+
+  type                  String                   // card, bank_account
+
+  // Card details (last 4, brand, expiry)
+  card_last_four        String?
+  card_brand            String?
+  card_exp_month        Int?
+  card_exp_year         Int?
+
+  // Bank account details
+  account_last_four     String?
+  account_bank_name     String?
+
+  is_default            Boolean                  @default(false)
+
+  created_at            DateTime                 @default(now())
+  updated_at            DateTime                 @updatedAt
+
+  @@index([workspace_id])
+  @@index([stripe_payment_method_id])
+}
+
+model usage_warnings {
+  id                    Int                      @id @default(autoincrement())
+  workspace_id          Int
+
+  warning_type          String                   // quota_80, quota_90, quota_100, overage_charge
+  metric_type           String                   // messages, storage, users, tokens, inference_hours
+
+  threshold_percent     Int                      @default(80) // 80, 90, 100
+  current_usage         Int
+  limit                 Int
+
+  acknowledged          Boolean                  @default(false)
+  acknowledged_at       DateTime?
+
+  created_at            DateTime                 @default(now())
+  updated_at            DateTime                 @updatedAt
+
+  @@index([workspace_id])
+  @@index([warning_type])
+  @@index([created_at])
+}
 // Knowledge Graph Models for PHASE 3
 model knowledge_graph_nodes {
   id              Int                          @id @default(autoincrement())
