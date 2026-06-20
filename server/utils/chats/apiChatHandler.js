@@ -15,6 +15,7 @@ const {
 } = require("../agents/ephemeral");
 const { Telemetry } = require("../../models/telemetry");
 const { CollectorApi } = require("../collectorApi");
+const { processVectorSearchWithReranking } = require("../rag/integration");
 const fs = require("fs");
 const path = require("path");
 const {
@@ -346,6 +347,29 @@ async function chatSync({
       metrics: {},
     };
   }
+
+  // Apply semantic reranking if enabled
+  let rerankedSources = vectorSearchResults.sources;
+  if (
+    workspace?.vectorSearchMode === "rerank" &&
+    vectorSearchResults.sources &&
+    vectorSearchResults.sources.length > 0
+  ) {
+    try {
+      rerankedSources = await processVectorSearchWithReranking({
+        vectorSearchResults: vectorSearchResults.sources,
+        query: message,
+        workspace,
+        LLMConnector,
+        enableReranking: true,
+      });
+    } catch (error) {
+      console.error("Reranking error (falling back to original results):", error.message);
+      rerankedSources = vectorSearchResults.sources;
+    }
+  }
+
+  vectorSearchResults.sources = rerankedSources;
 
   const { fillSourceWindow } = require("../helpers/chat");
   const filledSources = fillSourceWindow({
@@ -723,6 +747,29 @@ async function streamChat({
     });
     return;
   }
+
+  // Apply semantic reranking if enabled
+  let rerankedSources = vectorSearchResults.sources;
+  if (
+    workspace?.vectorSearchMode === "rerank" &&
+    vectorSearchResults.sources &&
+    vectorSearchResults.sources.length > 0
+  ) {
+    try {
+      rerankedSources = await processVectorSearchWithReranking({
+        vectorSearchResults: vectorSearchResults.sources,
+        query: message,
+        workspace,
+        LLMConnector,
+        enableReranking: true,
+      });
+    } catch (error) {
+      console.error("Reranking error (falling back to original results):", error.message);
+      rerankedSources = vectorSearchResults.sources;
+    }
+  }
+
+  vectorSearchResults.sources = rerankedSources;
 
   const { fillSourceWindow } = require("../helpers/chat");
   const filledSources = fillSourceWindow({

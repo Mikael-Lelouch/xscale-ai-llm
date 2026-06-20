@@ -29,7 +29,9 @@ function isNullOrNaN(value) {
  * @property {string} agentProvider - The agent provider of the workspace
  * @property {string} agentModel - The agent model of the workspace
  * @property {string} queryRefusalResponse - The query refusal response of the workspace
- * @property {string} vectorSearchMode - The vector search mode of the workspace
+ * @property {string} vectorSearchMode - The vector search mode of the workspace ("default" | "rerank")
+ * @property {string} rerankerType - The reranker type ("llm" | "native" | "none")
+ * @property {number} rerankerThreshold - The reranker relevance threshold (0-100)
  */
 
 const Workspace = {
@@ -56,6 +58,8 @@ const Workspace = {
     "agentModel",
     "queryRefusalResponse",
     "vectorSearchMode",
+    "rerankerType",
+    "rerankerThreshold",
     "router_id",
   ],
 
@@ -131,6 +135,23 @@ const Workspace = {
       )
         return "default";
       return value;
+    },
+    rerankerType: (value) => {
+      if (
+        !value ||
+        typeof value !== "string" ||
+        !["llm", "native", "none"].includes(value)
+      )
+        return "llm";
+      return value;
+    },
+    rerankerThreshold: (value) => {
+      if (value === null || value === undefined) return 60;
+      const threshold = parseInt(value);
+      if (isNaN(threshold)) return 60;
+      if (threshold < 0) return 0;
+      if (threshold > 100) return 100;
+      return threshold;
     },
     router_id: (value) => {
       if ([null, undefined, "", "none"].includes(value)) return null;
