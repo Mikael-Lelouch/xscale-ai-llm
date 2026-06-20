@@ -277,6 +277,25 @@ model event_logs {
   @@index([event])
 }
 
+model audit_logs {
+  id            Int      @id @default(autoincrement())
+  event_type    String   // data_residency_check, provider_change, compliance_check, inference_recorded
+  event_name    String   // Human-readable name
+  provider      String?  // LLM Provider used (Ollama, Mistral, etc.)
+  model         String?  // Specific model name
+  metadata      String?  // JSON string with additional data
+  data_location String?  // Where data is stored
+  workspace_id  Int?     // Associated workspace if applicable
+  user_id       Int?     // Associated user if applicable
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([event_type])
+  @@index([created_at])
+  @@index([provider])
+  @@index([workspace_id])
+}
+
 model slash_command_presets {
   id            Int      @id @default(autoincrement())
   command       String

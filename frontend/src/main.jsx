@@ -333,6 +333,15 @@ const router = createBrowserRouter([
       },
       // Experimental feature pages
       {
+        path: "/settings/sovereignty",
+        lazy: async () => {
+          const { default: SovereigntyDashboard } = await import(
+            "@/pages/Admin/SovereigntyDashboard"
+          );
+          return { element: <AdminRoute Component={SovereigntyDashboard} /> };
+        },
+      },
+      {
         path: "/settings/beta-features/live-document-sync/manage",
         lazy: async () => {
           const { default: LiveDocumentSyncManage } = await import(
