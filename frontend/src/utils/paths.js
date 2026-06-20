@@ -172,6 +172,9 @@ export default {
     privacy: () => {
       return "/settings/privacy";
     },
+    sovereignty: () => {
+      return "/settings/sovereignty";
+    },
     embedChatWidgets: () => {
       return `/settings/embed-chat-widgets`;
     },
