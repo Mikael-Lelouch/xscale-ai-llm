@@ -890,6 +890,77 @@ const System = {
       .catch((e) => ({ text: null, error: e.message }));
   },
 
+  /**
+   * Fetches the current deployment mode from the server.
+   * Detects whether the system is running locally or in the cloud (EU/US).
+   * Results are cached in localStorage for 24 hours.
+   * @returns {Promise<{mode: 'local'|'cloud-eu'|'cloud-us', provider: string, region: string|null, isEU: boolean, isCloud: boolean, isLocal: boolean, details: object, error: string|null}>}
+   */
+  fetchDeploymentMode: async function () {
+    const cacheKey = "anythingllm_deployment_mode";
+    const cache = window.localStorage.getItem(cacheKey);
+    const { data, lastFetched } = cache
+      ? safeJsonParse(cache, { data: null, lastFetched: 0 })
+      : { data: null, lastFetched: 0 };
+
+    // Return cached data if fresh (less than 24 hours old)
+    if (data && Date.now() - lastFetched < 8.64e7) {
+      return { ...data, error: null };
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/v1/system/deployment-mode`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch deployment mode.");
+
+      const deploymentData = await response.json();
+
+      // Cache the result
+      window.localStorage.setItem(
+        cacheKey,
+        JSON.stringify({
+          data: {
+            mode: deploymentData.mode || "cloud-us",
+            provider: deploymentData.provider,
+            region: deploymentData.region,
+            isEU: deploymentData.isEU || false,
+            isCloud: deploymentData.isCloud || true,
+            isLocal: deploymentData.isLocal || false,
+            details: deploymentData.details || {},
+          },
+          lastFetched: Date.now(),
+        })
+      );
+
+      return {
+        mode: deploymentData.mode || "cloud-us",
+        provider: deploymentData.provider,
+        region: deploymentData.region,
+        isEU: deploymentData.isEU || false,
+        isCloud: deploymentData.isCloud || true,
+        isLocal: deploymentData.isLocal || false,
+        details: deploymentData.details || {},
+        error: null,
+      };
+    } catch (e) {
+      console.error("Error fetching deployment mode:", e);
+      // Return default cloud-us if fetch fails
+      return {
+        mode: "cloud-us",
+        provider: null,
+        region: null,
+        isEU: false,
+        isCloud: true,
+        isLocal: false,
+        details: {},
+        error: e.message,
+      };
+    }
+  },
+
   experimentalFeatures: {
     liveSync: LiveDocumentSync,
     agentPlugins: AgentPlugins,
