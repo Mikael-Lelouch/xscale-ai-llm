@@ -1,13 +1,21 @@
 #!/bin/bash
+# Lightweight health check for XSCALE AI - does NOT perform startup operations
+# Just verifies the server is responding
 
-# Send a request to the specified URL
-response=$(curl --write-out '%{http_code}' --silent --output /dev/null http://localhost:3001/api/ping)
+set -e
 
-# If the HTTP response code is 200 (OK), the server is up
-if [ "$response" -eq 200 ]; then
-  echo "Server is up"
-  exit 0
-else
-  echo "Server is down"
-  exit 1
-fi
+PORT=${SERVER_PORT:-3001}
+MAX_RETRIES=${HEALTHCHECK_RETRIES:-3}
+RETRY_DELAY=1
+
+for i in $(seq 1 $MAX_RETRIES); do
+  if curl -sf http://localhost:$PORT/api/health > /dev/null 2>&1; then
+    exit 0
+  fi
+
+  if [ $i -lt $MAX_RETRIES ]; then
+    sleep $RETRY_DELAY
+  fi
+done
+
+exit 1

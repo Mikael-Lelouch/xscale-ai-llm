@@ -154,9 +154,11 @@ function agentFlowEndpoints(app) {
 
         // Track if client disconnects
         let clientDisconnected = false;
+        let executionFinalized = false;
         response.on("close", () => {
           clientDisconnected = true;
-          if (executionId) {
+          // Only mark as aborted if execution hasn't already been finalized
+          if (executionId && !executionFinalized && response.writableEnded) {
             AgentFlowExecution.updateStatus(executionId, "aborted");
           }
         });
@@ -199,6 +201,7 @@ function agentFlowEndpoints(app) {
             stepCount: flow.config.steps.length,
           }
         );
+        executionFinalized = true;
 
         // Send final response
         writeChunk({

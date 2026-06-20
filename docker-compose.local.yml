@@ -18,6 +18,8 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - xscale-network
 
   # XSCALE AI - Connected to local Ollama
   xscale-ai:
