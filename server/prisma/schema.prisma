@@ -91,6 +91,13 @@ model users {
   workspace_parsed_files       workspace_parsed_files[]
   memories                     memories[]
   agent_flow_executions        agent_flow_executions[]
+  mfa_settings                 mfa_settings?
+  mfa_recovery_sessions        mfa_recovery_sessions[]
+  ip_whitelist                 ip_whitelist[]
+  device_fingerprints          device_fingerprints[]
+  user_sessions                user_sessions[]
+  login_attempts               login_attempts[]
+  user_sso_accounts            user_sso_accounts[]
 }
 
 model recovery_codes {
@@ -162,6 +169,7 @@ model workspaces {
   memories                     memories[]
   knowledge_graph_nodes        knowledge_graph_nodes[]
   knowledge_graph_edges        knowledge_graph_edges[]
+  sso_integrations             sso_integrations[]
 }
 
 model workspace_threads {
@@ -585,6 +593,7 @@ model usage_metrics {
   created_at            DateTime                 @default(now())
   updated_at            DateTime                 @updatedAt
 
+  workspace             workspaces               @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
   workspace_tier        workspace_tiers          @relation(fields: [workspace_tier_id], references: [id], onDelete: Cascade)
 
   @@index([workspace_id])
@@ -629,6 +638,7 @@ model billing_invoices {
   created_at            DateTime                 @default(now())
   updated_at            DateTime                 @updatedAt
 
+  workspace             workspaces               @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
   workspace_tier        workspace_tiers          @relation(fields: [workspace_tier_id], references: [id], onDelete: Cascade)
 
   @@index([workspace_id])
@@ -714,6 +724,8 @@ model usage_warnings {
   created_at            DateTime                 @default(now())
   updated_at            DateTime                 @updatedAt
 
+  workspace             workspaces               @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+
   @@index([workspace_id])
   @@index([warning_type])
   @@index([created_at])
@@ -785,29 +797,6 @@ model agent_flow_executions {
   @@index([startedAt])
 }
 
-model audit_logs {
-  id                Int      @id @default(autoincrement())
-  event_type        String
-  resource_type     String?
-  resource_id       Int?
-  user_id           Int?
-  workspace_id      Int?
-  action            String?
-  details           String?  @default("{}")
-  ip_address        String?
-  user_agent        String?
-  status            String   @default("success")
-  error_message     String?
-  timestamp         DateTime @default(now())
-  user              users?   @relation(fields: [user_id], references: [id], onDelete: SetNull)
-  workspace         workspaces? @relation(fields: [workspace_id], references: [id], onDelete: SetNull)
-
-  @@index([user_id])
-  @@index([workspace_id])
-  @@index([event_type])
-  @@index([timestamp])
-}
-
 model sso_integrations {
   id                  Int     @id @default(autoincrement())
   workspace_id        Int
@@ -844,6 +833,7 @@ model user_sso_accounts {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   user                users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  sso_oauth_tokens    sso_oauth_tokens[]
 
   @@unique([provider, provider_user_id])
   @@index([user_id])
