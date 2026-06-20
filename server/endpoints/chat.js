@@ -26,7 +26,7 @@ function chatEndpoints(app) {
     async (request, response) => {
       try {
         const user = await userFromSession(request, response);
-        const { message, attachments = [] } = reqBody(request);
+        const { message, attachments = [], includeReasoning = null } = reqBody(request);
         const workspace = response.locals.workspace;
 
         if (typeof message !== "string" || message.trim().length === 0) {
@@ -66,7 +66,8 @@ function chatEndpoints(app) {
           workspace?.chatMode,
           user,
           null,
-          attachments
+          attachments,
+          includeReasoning
         );
         await Telemetry.sendTelemetry("sent_chat", {
           multiUserMode: multiUserMode(response),

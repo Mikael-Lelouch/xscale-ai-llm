@@ -138,6 +138,9 @@ export default {
     vectorDatabase: () => {
       return "/settings/vector-database";
     },
+    localModels: () => {
+      return "/settings/local-models";
+    },
     security: () => {
       return "/settings/security";
     },
@@ -168,6 +171,9 @@ export default {
     },
     privacy: () => {
       return "/settings/privacy";
+    },
+    sovereignty: () => {
+      return "/settings/sovereignty";
     },
     embedChatWidgets: () => {
       return `/settings/embed-chat-widgets`;

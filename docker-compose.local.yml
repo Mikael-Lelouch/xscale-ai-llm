@@ -1,0 +1,99 @@
+version: "3.8"
+
+services:
+  # Mistral via Ollama - French sovereign AI model
+  ollama:
+    image: ollama/ollama:latest
+    container_name: xscale-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+    command: serve
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - xscale-network
+
+  # XSCALE AI - Connected to local Ollama
+  xscale-ai:
+    image: xscale-ai:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: xscale-ai-app
+    ports:
+      - "3001:3001"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    volumes:
+      # Persistent storage for databases, documents, etc.
+      - xscale_storage:/app/server/storage
+      # Optional: Mount local models directory if you have pre-downloaded models
+      # - ./models:/root/.ollama/models
+    environment:
+      # Core settings
+      SERVER_PORT: 3001
+      NODE_ENV: production
+      STORAGE_DIR: /app/server/storage
+      ANYTHING_LLM_RUNTIME: docker
+
+      # LLM Provider: Use local Ollama
+      LLM_PROVIDER: ollama
+      OLLAMA_BASE_PATH: http://ollama:11434
+      OLLAMA_MODEL_PREF: mistral
+
+      # Embedding: Use local native embedder (no external calls)
+      EMBEDDING_ENGINE: native
+      EMBEDDING_MODEL_PREF: Xenova/all-MiniLM-L6-v2
+
+      # Vector Database: Use LanceDB (local, no external DB needed)
+      VECTOR_DB: lancedb
+
+      # Authentication (single user for local deployment)
+      # Uncomment and set a strong password if you want to enable auth
+      # AUTH_TOKEN: your-secure-password-here
+
+      # Security
+      DISABLE_TELEMETRY: "true"
+      DISABLE_SWAGGER_DOCS: "true"
+
+      # Optional: Fine-tune behavior
+      # LOG_LEVEL: info
+      # ANYTHINGLLM_CHROMIUM_ARGS: --no-sandbox
+    restart: unless-stopped
+    networks:
+      - xscale-network
+
+  # Optional: Nginx reverse proxy for SSL/better networking
+  # Uncomment if you want to add HTTPS support
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: xscale-nginx
+  #   ports:
+  #     - "443:443"
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./certs:/etc/nginx/certs:ro
+  #   depends_on:
+  #     - xscale-ai
+  #   networks:
+  #     - xscale-network
+
+volumes:
+  ollama_data:
+    driver: local
+  xscale_storage:
+    driver: local
+
+networks:
+  xscale-network:
+    driver: bridge

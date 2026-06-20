@@ -729,6 +729,104 @@ function apiDocumentEndpoints(app) {
   );
 
   app.get(
+    "/v1/workspace/:workspaceId/documents",
+    [validApiKey],
+    async (request, response) => {
+      /*
+    #swagger.tags = ['Documents']
+    #swagger.description = 'Get paginated documents for a specific workspace. Supports lazy loading with pagination, filtering, and sorting.'
+    #swagger.parameters['workspaceId'] = {
+      in: 'path',
+      description: 'ID of the workspace',
+      required: true,
+      type: 'number'
+    }
+    #swagger.parameters['page'] = {
+      in: 'query',
+      description: 'Page number (1-based, default: 1)',
+      type: 'number'
+    }
+    #swagger.parameters['limit'] = {
+      in: 'query',
+      description: 'Documents per page (default: 50, max: 100)',
+      type: 'number'
+    }
+    #swagger.parameters['sortBy'] = {
+      in: 'query',
+      description: 'Sort field: recent (default), name, size',
+      type: 'string'
+    }
+    #swagger.parameters['filterType'] = {
+      in: 'query',
+      description: 'Filter by document type extension (e.g., pdf, docx)',
+      type: 'string'
+    }
+    #swagger.responses[200] = {
+      content: {
+        "application/json": {
+          schema: {
+            type: 'object',
+            example: {
+              documents: [
+                {
+                  "id": 1,
+                  "docId": "uuid-1234",
+                  "filename": "document.pdf",
+                  "docpath": "custom-documents/document.pdf",
+                  "workspaceId": 1,
+                  "metadata": "{}",
+                  "pinned": false,
+                  "watched": false,
+                  "createdAt": "2024-01-16T03:07:00Z",
+                  "lastUpdatedAt": "2024-01-16T03:07:00Z"
+                }
+              ],
+              total: 1000,
+              page: 1,
+              pages: 20,
+              pageSize: 50
+            }
+          }
+        }
+      }
+    }
+    #swagger.responses[403] = {
+      schema: {
+        "$ref": "#/definitions/InvalidAPIKey"
+      }
+    }
+    */
+      try {
+        const { workspaceId } = request.params;
+        let { page = 1, limit = 50, sortBy = "recent", filterType = null } = request.query;
+
+        page = Math.max(1, parseInt(page) || 1);
+        limit = Math.max(1, Math.min(100, parseInt(limit) || 50));
+
+        if (!workspaceId || isNaN(parseInt(workspaceId))) {
+          response.status(400).json({
+            error: "Valid workspaceId parameter is required",
+          });
+          return;
+        }
+
+        const result = await Document.forWorkspacePaginated(
+          parseInt(workspaceId),
+          page,
+          limit,
+          sortBy,
+          filterType
+        );
+
+        response.status(200).json(result);
+      } catch (e) {
+        console.error(e.message, e);
+        response.sendStatus(500).end();
+      }
+    }
+  );
+
+  app.get(
     "/v1/document/accepted-file-types",
     [validApiKey],
     async (_, response) => {

@@ -16,6 +16,12 @@ if [ -z "$STORAGE_DIR" ]; then
     echo "================================================================"
 fi
 
+# Prisma schema resolves to /app/server/storage regardless of STORAGE_DIR.
+# When Coolify mounts a volume here, the directory may be root-owned.
+# We ensure it exists and is writable (ignore errors if already correct).
+mkdir -p /app/server/storage 2>/dev/null || true
+chmod 775 /app/server/storage 2>/dev/null || true
+
 {
   cd /app/server/ &&
     # Disable Prisma CLI telemetry (https://www.prisma.io/docs/orm/tools/prisma-cli#how-to-opt-out-of-data-collection)

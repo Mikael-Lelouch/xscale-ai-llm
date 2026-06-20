@@ -1,10 +1,12 @@
 const { AgentFlows } = require("../utils/agentFlows");
+const { AgentFlowExecution } = require("../models/agentFlowExecution");
 const {
   flexUserRoleValid,
   ROLES,
 } = require("../utils/middleware/multiUserProtected");
 const { validatedRequest } = require("../utils/middleware/validatedRequest");
 const { Telemetry } = require("../models/telemetry");
+const { safeJSONStringify } = require("../utils/helpers/chat/responses");
 
 function agentFlowEndpoints(app) {
   if (!app) return;
@@ -101,38 +103,229 @@ function agentFlowEndpoints(app) {
   );
 
   // Run a specific flow
-  // app.post(
-  //   "/agent-flows/:uuid/run",
-  //   [validatedRequest, flexUserRoleValid([ROLES.admin])],
-  //   async (request, response) => {
-  //     try {
-  //       const { uuid } = request.params;
-  //       const { variables = {} } = request.body;
+  app.post(
+    "/agent-flows/:uuid/run",
+    [validatedRequest, flexUserRoleValid([ROLES.admin])],
+    async (request, response) => {
+      let executionId = null;
+      try {
+        const { uuid } = request.params;
+        const { variables = {} } = request.body;
+        const userId = request.user?.id || null;
 
-  //       // TODO: Implement flow execution
-  //       console.log("Running flow with UUID:", uuid);
+        // Load the flow
+        const flow = AgentFlows.loadFlow(uuid);
+        if (!flow) {
+          return response.status(404).json({
+            success: false,
+            error: "Flow not found",
+          });
+        }
 
-  //       await Telemetry.sendTelemetry("agent_flow_executed", {
-  //         variableCount: Object.keys(variables).length,
-  //       });
+        // Check if flow is active
+        if (flow.config.active === false) {
+          return response.status(400).json({
+            success: false,
+            error: "Flow is not active",
+          });
+        }
 
-  //       return response.status(200).json({
-  //         success: true,
-  //         results: {
-  //           success: true,
-  //           results: "test",
-  //           variables: variables,
-  //         },
-  //       });
-  //     } catch (error) {
-  //       console.error("Error running flow:", error);
-  //       return response.status(500).json({
-  //         success: false,
-  //         error: error.message,
-  //       });
-  //     }
-  //   }
-  // );
+        // Start execution record
+        const executionResult = await AgentFlowExecution.startExecution(
+          uuid,
+          flow.name,
+          variables,
+          userId
+        );
+        if (!executionResult.success) {
+          return response.status(500).json({
+            success: false,
+            error: "Failed to start execution",
+          });
+        }
+
+        executionId = executionResult.executionId;
+
+        // Set up SSE response headers
+        response.setHeader("Content-Type", "text/event-stream");
+        response.setHeader("Cache-Control", "no-cache");
+        response.setHeader("Connection", "keep-alive");
+        response.setHeader("Access-Control-Allow-Origin", "*");
+
+        // Track if client disconnects
+        let clientDisconnected = false;
+        let executionFinalized = false;
+        response.on("close", () => {
+          clientDisconnected = true;
+          // Only mark as aborted if execution hasn't already been finalized
+          if (executionId && !executionFinalized && response.writableEnded) {
+            AgentFlowExecution.updateStatus(executionId, "aborted");
+          }
+        });
+
+        // Helper to write SSE chunks
+        const writeChunk = (data) => {
+          if (!clientDisconnected) {
+            try {
+              response.write(`data: ${safeJSONStringify(data)}\n\n`);
+            } catch (err) {
+              console.error("Failed to write chunk:", err);
+            }
+          }
+        };
+
+        // Execute flow with streaming
+        const { FlowExecutor } = require("../utils/agentFlows/executor");
+        const flowExecutor = new FlowExecutor();
+
+        // Attach execution context with streaming callback
+        flowExecutor.attachExecutionContext(executionId, writeChunk);
+
+        // Execute the flow
+        const result = await flowExecutor.executeFlowWithStreaming(
+          flow,
+          variables,
+          null, // aibitat instance (not available in REST context)
+          executionId,
+          writeChunk
+        );
+
+        // Finalize execution in database
+        await AgentFlowExecution.finalizeExecution(
+          executionId,
+          result.success,
+          result.results,
+          result.success ? null : "Execution completed with errors",
+          {
+            directOutput: !!result.directOutput,
+            stepCount: flow.config.steps.length,
+          }
+        );
+        executionFinalized = true;
+
+        // Send final response
+        writeChunk({
+          id: executionId,
+          type: "executionComplete",
+          success: result.success,
+          results: result.results,
+          variables: result.variables,
+          directOutput: result.directOutput,
+          timestamp: new Date().toISOString(),
+          close: true,
+        });
+
+        // Send telemetry
+        await Telemetry.sendTelemetry("agent_flow_executed", {
+          flowUuid: uuid,
+          variableCount: Object.keys(variables).length,
+          stepCount: flow.config.steps.length,
+          success: result.success,
+          executionTimeMs: Date.now() - executionResult.execution.startedAt,
+        });
+
+        response.end();
+      } catch (error) {
+        console.error("Error running flow:", error);
+
+        // Update execution with error if it was started
+        if (executionId) {
+          await AgentFlowExecution.finalizeExecution(
+            executionId,
+            false,
+            [],
+            error.message
+          );
+        }
+
+        // Send error response
+        if (!response.headersSent) {
+          return response.status(500).json({
+            success: false,
+            error: error.message,
+          });
+        } else {
+          // If headers were sent, write error as SSE
+          try {
+            response.write(
+              `data: ${safeJSONStringify({
+                type: "executionError",
+                error: error.message,
+                close: true,
+              })}\n\n`
+            );
+          } catch (err) {
+            console.error("Failed to send error chunk:", err);
+          }
+          response.end();
+        }
+      }
+    }
+  );
+
+  // Get execution history for a flow
+  app.get(
+    "/agent-flows/:uuid/executions",
+    [validatedRequest, flexUserRoleValid([ROLES.admin])],
+    async (request, response) => {
+      try {
+        const { uuid } = request.params;
+        const { limit = 50, offset = 0 } = request.query;
+
+        const executions = await AgentFlowExecution.listExecutions(
+          uuid,
+          parseInt(limit),
+          parseInt(offset)
+        );
+
+        const stats = await AgentFlowExecution.getExecutionStats(uuid);
+
+        return response.status(200).json({
+          success: true,
+          executions,
+          stats,
+        });
+      } catch (error) {
+        console.error("Error getting execution history:", error);
+        return response.status(500).json({
+          success: false,
+          error: error.message,
+        });
+      }
+    }
+  );
+
+  // Get a specific execution
+  app.get(
+    "/agent-flows/execution/:executionId",
+    [validatedRequest, flexUserRoleValid([ROLES.admin])],
+    async (request, response) => {
+      try {
+        const { executionId } = request.params;
+        const execution = await AgentFlowExecution.getExecution(
+          parseInt(executionId)
+        );
+
+        if (!execution) {
+          return response.status(404).json({
+            success: false,
+            error: "Execution not found",
+          });
+        }
+
+        return response.status(200).json({
+          success: true,
+          execution,
+        });
+      } catch (error) {
+        console.error("Error getting execution:", error);
+        return response.status(500).json({
+          success: false,
+          error: error.message,
+        });
+      }
+    }
+  );
 
   // Delete a specific flow
   app.delete(

@@ -29,7 +29,9 @@ function isNullOrNaN(value) {
  * @property {string} agentProvider - The agent provider of the workspace
  * @property {string} agentModel - The agent model of the workspace
  * @property {string} queryRefusalResponse - The query refusal response of the workspace
- * @property {string} vectorSearchMode - The vector search mode of the workspace
+ * @property {string} vectorSearchMode - The vector search mode of the workspace ("default" | "rerank")
+ * @property {string} rerankerType - The reranker type ("llm" | "native" | "none")
+ * @property {number} rerankerThreshold - The reranker relevance threshold (0-100)
  */
 
 const Workspace = {
@@ -56,6 +58,8 @@ const Workspace = {
     "agentModel",
     "queryRefusalResponse",
     "vectorSearchMode",
+    "rerankerType",
+    "rerankerThreshold",
     "router_id",
   ],
 
@@ -131,6 +135,23 @@ const Workspace = {
       )
         return "default";
       return value;
+    },
+    rerankerType: (value) => {
+      if (
+        !value ||
+        typeof value !== "string" ||
+        !["llm", "native", "none"].includes(value)
+      )
+        return "llm";
+      return value;
+    },
+    rerankerThreshold: (value) => {
+      if (value === null || value === undefined) return 60;
+      const threshold = parseInt(value);
+      if (isNaN(threshold)) return 60;
+      if (threshold < 0) return 0;
+      if (threshold > 100) return 100;
+      return threshold;
     },
     router_id: (value) => {
       if ([null, undefined, "", "none"].includes(value)) return null;
@@ -287,9 +308,9 @@ const Workspace = {
     }
   },
 
-  getWithUser: async function (user = null, clause = {}) {
+  getWithUser: async function (user = null, clause = {}, includeDocuments = true) {
     if ([ROLES.admin, ROLES.manager].includes(user.role))
-      return this.get(clause);
+      return this.get(clause, includeDocuments);
 
     try {
       const workspace = await prisma.workspaces.findFirst({
@@ -303,15 +324,21 @@ const Workspace = {
         },
         include: {
           workspace_users: true,
-          documents: true,
+          documents: includeDocuments ? true : false,
         },
       });
 
       if (!workspace) return null;
 
+      // Load documents separately if needed (for lazy loading optimization)
+      let documents = [];
+      if (includeDocuments) {
+        documents = await Document.forWorkspace(workspace.id);
+      }
+
       return {
         ...workspace,
-        documents: await Document.forWorkspace(workspace.id),
+        documents,
         contextWindow: this._getContextWindow(workspace),
         currentContextTokenCount: await this._getCurrentContextTokenCount(
           workspace.id
@@ -359,18 +386,26 @@ const Workspace = {
     return LLMProvider?.promptWindowLimit?.(model) || null;
   },
 
-  get: async function (clause = {}) {
+  get: async function (clause = {}, includeDocuments = true) {
     try {
       const workspace = await prisma.workspaces.findFirst({
         where: clause,
         include: {
-          documents: true,
+          documents: includeDocuments ? true : false,
         },
       });
 
       if (!workspace) return null;
+
+      // Load documents separately if needed (for lazy loading optimization)
+      let documents = [];
+      if (includeDocuments) {
+        documents = await Document.forWorkspace(workspace.id);
+      }
+
       return {
         ...workspace,
+        documents,
         contextWindow: this._getContextWindow(workspace),
         currentContextTokenCount: await this._getCurrentContextTokenCount(
           workspace.id

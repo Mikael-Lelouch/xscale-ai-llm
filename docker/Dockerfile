@@ -140,8 +140,16 @@ WORKDIR /app
 # The output (static HTML/CSS/JS) is platform-independent.
 FROM --platform=$BUILDPLATFORM node:18-slim AS frontend-build
 WORKDIR /app/frontend
+
+# Configure yarn for robust network handling
+ENV YARN_NETWORK_TIMEOUT=600000
+ENV YARN_MAX_RETRIES=10
+ENV npm_config_fetch_timeout=600000
+ENV npm_config_fetch_retry_mintimeout=20000
+ENV npm_config_fetch_retry_maxtimeout=120000
+
 COPY ./frontend/package.json ./frontend/yarn.lock ./
-RUN yarn install --network-timeout 100000 && yarn cache clean
+RUN yarn install --network-timeout 600000 && yarn cache clean
 COPY ./frontend/ ./
 RUN yarn build
 WORKDIR /app
@@ -151,14 +159,30 @@ WORKDIR /app
 FROM build AS backend-build
 COPY --chown=anythingllm:anythingllm ./server /app/server/
 WORKDIR /app/server
-RUN yarn install --production --network-timeout 100000 && yarn cache clean
+
+# Configure yarn for robust network handling (ripgrep download reliability)
+ENV YARN_NETWORK_TIMEOUT=600000
+ENV YARN_MAX_RETRIES=10
+ENV npm_config_fetch_timeout=600000
+ENV npm_config_fetch_retry_mintimeout=20000
+ENV npm_config_fetch_retry_maxtimeout=120000
+
+RUN yarn install --production --network-timeout 600000 && yarn cache clean
 WORKDIR /app
 
 # Install collector dependencies
 COPY --chown=anythingllm:anythingllm ./collector/ ./collector/
 WORKDIR /app/collector
+
+# Configure yarn for robust network handling
 ENV PUPPETEER_DOWNLOAD_BASE_URL=https://storage.googleapis.com/chrome-for-testing-public
-RUN yarn install --production --network-timeout 100000 && yarn cache clean
+ENV YARN_NETWORK_TIMEOUT=600000
+ENV YARN_MAX_RETRIES=10
+ENV npm_config_fetch_timeout=600000
+ENV npm_config_fetch_retry_mintimeout=20000
+ENV npm_config_fetch_retry_maxtimeout=120000
+
+RUN yarn install --production --network-timeout 600000 && yarn cache clean
 
 WORKDIR /app
 USER anythingllm
@@ -168,14 +192,24 @@ FROM backend-build AS production-build
 WORKDIR /app
 COPY --chown=anythingllm:anythingllm --from=frontend-build /app/frontend/dist /app/server/public
 
+# Pre-create the storage directory with correct ownership so it survives volume mounts.
+# Must run as root so the directory exists in the image layer before USER anythingllm.
+USER root
+RUN mkdir -p /app/server/storage && chown -R anythingllm:anythingllm /app/server/storage
+
 # Setup the environment
 ENV NODE_ENV=production
 ENV ANYTHING_LLM_RUNTIME=docker
 ENV DEPLOYMENT_VERSION=1.14.1
 
 # Setup the healthcheck
+COPY docker/docker-healthcheck.sh /usr/local/bin/docker-healthcheck.sh
+RUN chmod +x /usr/local/bin/docker-healthcheck.sh
 HEALTHCHECK --interval=1m --timeout=10s --start-period=1m \
   CMD /bin/bash /usr/local/bin/docker-healthcheck.sh || exit 1
+
+# Drop back to non-root for runtime
+USER anythingllm
 
 # Run the server
 # CMD ["sh", "-c", "tail -f /dev/null"] # For development: keep container open

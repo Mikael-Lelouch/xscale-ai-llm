@@ -233,6 +233,85 @@ const Admin = {
         return false;
       });
   },
+
+  // Sovereignty Dashboard
+  sovereigntyStats: async () => {
+    return await fetch(`${API_BASE}/v1/admin/sovereignty/stats`, {
+      method: "GET",
+      headers: baseHeaders(),
+    })
+      .then((res) => res.json())
+      .catch((e) => {
+        console.error(e);
+        return null;
+      });
+  },
+
+  sovereigntyModelUsage: async (daysBack = 30) => {
+    return await fetch(
+      `${API_BASE}/v1/admin/sovereignty/model-usage?daysBack=${daysBack}`,
+      {
+        method: "GET",
+        headers: baseHeaders(),
+      }
+    )
+      .then((res) => res.json())
+      .catch((e) => {
+        console.error(e);
+        return { usage: [], totalCount: 0 };
+      });
+  },
+
+  sovereigntyActivityLog: async (limit = 50, offset = 0, eventType = null) => {
+    const params = new URLSearchParams({
+      limit,
+      offset,
+      ...(eventType && { eventType }),
+    });
+
+    return await fetch(
+      `${API_BASE}/v1/admin/sovereignty/activity-log?${params}`,
+      {
+        method: "GET",
+        headers: baseHeaders(),
+      }
+    )
+      .then((res) => res.json())
+      .catch((e) => {
+        console.error(e);
+        return { logs: [], totalCount: 0 };
+      });
+  },
+
+  logInference: async (provider, model, workspaceId = null, metadata = {}) => {
+    return await fetch(`${API_BASE}/v1/admin/sovereignty/log-inference`, {
+      method: "POST",
+      headers: baseHeaders(),
+      body: JSON.stringify({
+        provider,
+        model,
+        workspaceId,
+        metadata,
+      }),
+    })
+      .then((res) => res.json())
+      .catch((e) => {
+        console.error(e);
+        return { success: false, error: e.message };
+      });
+  },
+
+  exportCompliancePDF: async () => {
+    return await fetch(`${API_BASE}/v1/admin/sovereignty/export-compliance-pdf`, {
+      method: "POST",
+      headers: baseHeaders(),
+    })
+      .then((res) => res.blob())
+      .catch((e) => {
+        console.error(e);
+        throw new Error("Failed to export PDF");
+      });
+  },
 };
 
 export default Admin;

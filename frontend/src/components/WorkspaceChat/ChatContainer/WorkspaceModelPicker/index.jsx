@@ -14,6 +14,7 @@ import Workspace from "@/models/workspace";
 import System from "@/models/system";
 import ModelRouterAPI from "@/models/modelRouter";
 import { SIDEBAR_TOGGLE_EVENT } from "@/components/Sidebar/SidebarToggle";
+import SovereigntyBadge, { useDeploymentMode } from "@/components/SovereigntyBadge";
 
 async function resolveModelName(workspace, systemSettings, t) {
   const effectiveProvider =
@@ -47,6 +48,7 @@ export default function WorkspaceModelPicker({ workspaceSlug = null }) {
   const { user } = useUser();
   const [showSelector, setShowSelector] = useState(false);
   const [modelName, setModelName] = useState("");
+  const [deploymentMode, setDeploymentMode] = useState("cloud-us");
   const {
     isOpen: isSetupProviderOpen,
     openModal: openSetupProviderModal,
@@ -68,6 +70,15 @@ export default function WorkspaceModelPicker({ workspaceSlug = null }) {
   useEffect(() => {
     fetchModelName(slug, setModelName, t);
   }, [slug]);
+
+  // Detect deployment mode
+  useEffect(() => {
+    async function detectMode() {
+      const detectedMode = await useDeploymentMode();
+      setDeploymentMode(detectedMode);
+    }
+    detectMode();
+  }, []);
 
   // Close selector and refresh model name when model is saved
   useEffect(() => {
@@ -104,6 +115,7 @@ export default function WorkspaceModelPicker({ workspaceSlug = null }) {
           onClick={() => setShowSelector(false)}
         />
       )}
+      {/* Model Picker Button */}
       <div
         className={`hidden md:block absolute top-2 z-30 transition-all duration-500 ${
           sidebarOpen ? "left-3" : "left-11"
@@ -138,6 +150,15 @@ export default function WorkspaceModelPicker({ workspaceSlug = null }) {
             />
           </div>
         )}
+      </div>
+
+      {/* Sovereignty Badge - Top Right */}
+      <div className="hidden md:block absolute top-2 right-3 z-30">
+        <SovereigntyBadge
+          mode={deploymentMode}
+          size="sm"
+          showTooltip={true}
+        />
       </div>
 
       <SetupProvider

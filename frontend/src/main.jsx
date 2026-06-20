@@ -61,6 +61,15 @@ const router = createBrowserRouter([
           return { element: <InvitePage /> };
         },
       },
+      {
+        path: "/local-deployment",
+        lazy: async () => {
+          const { default: LocalDeployment } = await import(
+            "@/pages/LocalDeployment"
+          );
+          return { element: <LocalDeployment /> };
+        },
+      },
       // Admin routes
       {
         path: "/settings/llm-preference",
@@ -123,6 +132,17 @@ const router = createBrowserRouter([
           );
           return {
             element: <AdminRoute Component={GeneralVectorDatabase} />,
+          };
+        },
+      },
+      {
+        path: "/settings/local-models",
+        lazy: async () => {
+          const { default: LocalModels } = await import(
+            "@/pages/GeneralSettings/LocalModels"
+          );
+          return {
+            element: <AdminRoute Component={LocalModels} />,
           };
         },
       },
@@ -332,6 +352,15 @@ const router = createBrowserRouter([
         element: <OnboardingFlow />,
       },
       // Experimental feature pages
+      {
+        path: "/settings/sovereignty",
+        lazy: async () => {
+          const { default: SovereigntyDashboard } = await import(
+            "@/pages/Admin/SovereigntyDashboard"
+          );
+          return { element: <AdminRoute Component={SovereigntyDashboard} /> };
+        },
+      },
       {
         path: "/settings/beta-features/live-document-sync/manage",
         lazy: async () => {

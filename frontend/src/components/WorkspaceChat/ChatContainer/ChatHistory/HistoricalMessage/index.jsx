@@ -14,6 +14,7 @@ import {
   THOUGHT_REGEX_OPEN,
   ThoughtChainComponent,
 } from "../ThoughtContainer";
+import ReasoningDisplay from "../ReasoningDisplay";
 import paths from "@/utils/paths";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -39,11 +40,13 @@ const HistoricalMessage = ({
   metrics = {},
   outputs = [],
   clarifyingQuestions = [],
+  reasoning = null,
 }) => {
   // Freeze uuid on first render. User messages arrive without a uuid and this value
   // is used as the wrapper div's `key` — a default param fallback would regenerate
   // on every render and remount the subtree, wiping TruncatableContent state.
   const [uuid] = useState(() => uuidProp ?? v4());
+  const [showReasoning, setShowReasoning] = useState(false);
   const { t } = useTranslation();
   const { isEditing } = useEditMessage({ chatId, role });
   const { isDeleted, completeDelete, onEndAnimation } = useWatchDeleteMessage({
@@ -148,6 +151,13 @@ const HistoricalMessage = ({
         ) : (
           <div className="break-words">
             <HistoricalClarifyingQuestions surveys={clarifyingQuestions} />
+            {reasoning && reasoning.steps && reasoning.steps.length > 0 && (
+              <ReasoningDisplay
+                steps={reasoning.steps}
+                isExpanded={showReasoning}
+                onToggleExpanded={setShowReasoning}
+              />
+            )}
             <RenderChatContent role={role} message={message} messageId={uuid} />
             {isRefusalMessage && (
               <Link

@@ -37,6 +37,9 @@ model workspace_documents {
   lastUpdatedAt        DateTime              @default(now())
   workspace            workspaces            @relation(fields: [workspaceId], references: [id])
   document_sync_queues document_sync_queues?
+
+  @@index([workspaceId])
+  @@index([workspaceId, createdAt])
 }
 
 model invites {
@@ -87,6 +90,7 @@ model users {
   desktop_mobile_devices       desktop_mobile_devices[]
   workspace_parsed_files       workspace_parsed_files[]
   memories                     memories[]
+  agent_flow_executions        agent_flow_executions[]
 }
 
 model recovery_codes {
@@ -140,6 +144,13 @@ model workspaces {
   queryRefusalResponse         String?
   vectorSearchMode             String?                        @default("default")
   router_id                    Int? // No relation to prevent whole table migration (SQLite limitation)
+
+  // Billing relations (PHASE 5)
+  workspace_tier               workspace_tiers?
+  usage_metrics                usage_metrics[]
+  billing_invoices             billing_invoices[]
+  usage_warnings               usage_warnings[]
+
   workspace_users              workspace_users[]
   documents                    workspace_documents[]
   workspace_suggested_messages workspace_suggested_messages[]
@@ -149,6 +160,8 @@ model workspaces {
   prompt_history               prompt_history[]
   workspace_parsed_files       workspace_parsed_files[]
   memories                     memories[]
+  knowledge_graph_nodes        knowledge_graph_nodes[]
+  knowledge_graph_edges        knowledge_graph_edges[]
 }
 
 model workspace_threads {
@@ -275,6 +288,25 @@ model event_logs {
   occurredAt DateTime @default(now())
 
   @@index([event])
+}
+
+model audit_logs {
+  id            Int      @id @default(autoincrement())
+  event_type    String   // data_residency_check, provider_change, compliance_check, inference_recorded
+  event_name    String   // Human-readable name
+  provider      String?  // LLM Provider used (Ollama, Mistral, etc.)
+  model         String?  // Specific model name
+  metadata      String?  // JSON string with additional data
+  data_location String?  // Where data is stored
+  workspace_id  Int?     // Associated workspace if applicable
+  user_id       Int?     // Associated user if applicable
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([event_type])
+  @@index([created_at])
+  @@index([provider])
+  @@index([workspace_id])
 }
 
 model slash_command_presets {
@@ -445,6 +477,18 @@ model memories {
   @@index([userId, scope])
 }
 
+model local_model_configs {
+  id            Int      @id @default(autoincrement())
+  providerId    String   @unique
+  isEnabled     Boolean  @default(false)
+  baseUrl       String
+  temperature   Float    @default(0.7)
+  maxTokens     Int      @default(2048)
+  defaultModel  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 model model_routers {
   id                Int                  @id @default(autoincrement())
   name              String               @unique
@@ -485,4 +529,427 @@ model model_router_rules {
   @@unique([router_id, title])
   @@index([router_id])
   @@index([router_id, enabled, priority])
+}
+
+// PHASE 5: Multi-tenant Billing System
+model workspace_tiers {
+  id                    Int                      @id @default(autoincrement())
+  workspace_id          Int                      @unique
+  tier                  String                   @default("free") // free, pro, team, enterprise
+  max_users             Int?                     // null = unlimited
+  max_storage_gb        Int?                     // null = unlimited
+  max_messages_month    Int?                     // null = unlimited
+  max_tokens_month      Int?                     // null = unlimited
+  max_inference_hours   Int?                     // null = unlimited
+  monthly_price         Float                    @default(0)
+  trial_ends_at         DateTime?
+  current_period_start  DateTime                 @default(now())
+  current_period_end    DateTime
+  subscription_id       String?                  // Stripe subscription ID
+  status                String                   @default("active") // active, canceled, past_due, unpaid
+  auto_renew            Boolean                  @default(true)
+  billing_email         String?
+  created_at            DateTime                 @default(now())
+  updated_at            DateTime                 @updatedAt
+
+  workspace             workspaces               @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+  usage_metrics         usage_metrics[]
+  billing_invoices      billing_invoices[]
+  stripe_subscriptions  stripe_subscriptions[]
+
+  @@index([workspace_id])
+  @@index([tier])
+  @@index([status])
+}
+
+model usage_metrics {
+  id                    Int                      @id @default(autoincrement())
+  workspace_id          Int
+  workspace_tier_id     Int
+
+  // Counters for this period (month)
+  messages_used         Int                      @default(0)
+  documents_stored_gb   Float                    @default(0.0)
+  active_users          Int                      @default(0)
+  tokens_used           Int                      @default(0)
+  inference_hours       Float                    @default(0.0)
+
+  // Snapshot metadata
+  snapshot_type         String                   @default("daily") // hourly, daily
+  snapshot_date         DateTime                 @default(now())
+
+  // Period tracking
+  billing_period_start  DateTime
+  billing_period_end    DateTime
+
+  created_at            DateTime                 @default(now())
+  updated_at            DateTime                 @updatedAt
+
+  workspace_tier        workspace_tiers          @relation(fields: [workspace_tier_id], references: [id], onDelete: Cascade)
+
+  @@index([workspace_id])
+  @@index([workspace_tier_id])
+  @@index([snapshot_date])
+  @@index([billing_period_start])
+}
+
+model billing_invoices {
+  id                    Int                      @id @default(autoincrement())
+  workspace_id          Int
+  workspace_tier_id     Int
+
+  invoice_number        String                   @unique
+  stripe_invoice_id     String?
+  status                String                   @default("draft") // draft, pending, sent, paid, failed, void
+
+  // Billing details
+  subtotal              Float                    @default(0)
+  tax                   Float                    @default(0)
+  total                 Float                    @default(0)
+  currency              String                   @default("USD")
+
+  // Usage-based charges (overages)
+  overage_messages      Int                      @default(0)
+  overage_storage_gb    Float                    @default(0)
+  overage_amount        Float                    @default(0)
+
+  // Period
+  billing_period_start  DateTime
+  billing_period_end    DateTime
+
+  // Payment tracking
+  issued_at             DateTime                 @default(now())
+  due_date              DateTime?
+  paid_at               DateTime?
+
+  // PDF URL and email
+  pdf_url               String?
+  email_sent_at         DateTime?
+
+  created_at            DateTime                 @default(now())
+  updated_at            DateTime                 @updatedAt
+
+  workspace_tier        workspace_tiers          @relation(fields: [workspace_tier_id], references: [id], onDelete: Cascade)
+
+  @@index([workspace_id])
+  @@index([workspace_tier_id])
+  @@index([status])
+  @@index([issued_at])
+  @@index([billing_period_start])
+}
+
+model stripe_subscriptions {
+  id                    Int                      @id @default(autoincrement())
+  workspace_id          Int
+  workspace_tier_id     Int
+
+  stripe_subscription_id String                  @unique
+  stripe_customer_id    String
+  stripe_product_id     String?
+  stripe_price_id       String?
+
+  status                String                   @default("active") // active, past_due, unpaid, canceled, incomplete
+  current_period_start  DateTime
+  current_period_end    DateTime
+  cancel_at_period_end  Boolean                  @default(false)
+  canceled_at           DateTime?
+
+  // Payment method
+  stripe_payment_method_id String?
+
+  metadata              String?                  // JSON metadata
+
+  created_at            DateTime                 @default(now())
+  updated_at            DateTime                 @updatedAt
+
+  workspace_tier        workspace_tiers          @relation(fields: [workspace_tier_id], references: [id], onDelete: Cascade)
+
+  @@index([workspace_id])
+  @@index([stripe_subscription_id])
+  @@index([stripe_customer_id])
+}
+
+model payment_methods {
+  id                    Int                      @id @default(autoincrement())
+  workspace_id          Int
+
+  stripe_payment_method_id String                @unique
+  stripe_customer_id    String
+
+  type                  String                   // card, bank_account
+
+  // Card details (last 4, brand, expiry)
+  card_last_four        String?
+  card_brand            String?
+  card_exp_month        Int?
+  card_exp_year         Int?
+
+  // Bank account details
+  account_last_four     String?
+  account_bank_name     String?
+
+  is_default            Boolean                  @default(false)
+
+  created_at            DateTime                 @default(now())
+  updated_at            DateTime                 @updatedAt
+
+  @@index([workspace_id])
+  @@index([stripe_payment_method_id])
+}
+
+model usage_warnings {
+  id                    Int                      @id @default(autoincrement())
+  workspace_id          Int
+
+  warning_type          String                   // quota_80, quota_90, quota_100, overage_charge
+  metric_type           String                   // messages, storage, users, tokens, inference_hours
+
+  threshold_percent     Int                      @default(80) // 80, 90, 100
+  current_usage         Int
+  limit                 Int
+
+  acknowledged          Boolean                  @default(false)
+  acknowledged_at       DateTime?
+
+  created_at            DateTime                 @default(now())
+  updated_at            DateTime                 @updatedAt
+
+  @@index([workspace_id])
+  @@index([warning_type])
+  @@index([created_at])
+}
+// Knowledge Graph Models for PHASE 3
+model knowledge_graph_nodes {
+  id              Int                          @id @default(autoincrement())
+  uuid            String                       @unique @default(uuid())
+  workspaceId     Int
+  nodeType        String                       @default("concept") // concept, document
+  label           String
+  description     String?
+  docId           String? // For document nodes, references workspace_documents.docId
+  category        String? // For concepts: extracted category (e.g., person, organization, topic)
+  embeddings      String? // JSON array for semantic similarity
+  metadata        String? @default("{}") // JSON metadata (keywords, confidence, etc.)
+  createdAt       DateTime                     @default(now())
+  updatedAt       DateTime                     @updatedAt
+  workspace       workspaces                   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  outgoingEdges   knowledge_graph_edges[]      @relation("fromNode")
+  incomingEdges   knowledge_graph_edges[]      @relation("toNode")
+
+  @@index([workspaceId])
+  @@index([nodeType])
+  @@index([docId])
+}
+
+model knowledge_graph_edges {
+  id              Int                          @id @default(autoincrement())
+  uuid            String                       @unique @default(uuid())
+  workspaceId     Int
+  fromNodeId      Int
+  toNodeId        Int
+  relationshipType String                      // references, related, similar, contradicts, mentions
+  weight          Float                        @default(50.0) // 0-100% relationship strength
+  confidence      Float                        @default(0.5) // 0-1.0 confidence score
+  reasoning       String? // Why this relationship exists
+  metadata        String? @default("{}") // JSON metadata
+  createdAt       DateTime                     @default(now())
+  updatedAt       DateTime                     @updatedAt
+  workspace       workspaces                   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  fromNode        knowledge_graph_nodes       @relation("fromNode", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNode          knowledge_graph_nodes       @relation("toNode", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+  @@index([relationshipType])
+}
+model agent_flow_executions {
+  id            Int        @id @default(autoincrement())
+  flowUuid      String
+  flowName      String
+  status        String     @default("pending")
+  startedAt     DateTime   @default(now())
+  completedAt   DateTime?
+  variables     String     @default("{}")
+  results       String     @default("[]")
+  error         String?
+  createdBy     Int?
+  metadata      String     @default("{}")
+  createdAt     DateTime   @default(now())
+  lastUpdatedAt DateTime   @default(now())
+  user          users?     @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([flowUuid])
+  @@index([status])
+  @@index([createdBy])
+  @@index([startedAt])
+}
+
+model audit_logs {
+  id                Int      @id @default(autoincrement())
+  event_type        String
+  resource_type     String?
+  resource_id       Int?
+  user_id           Int?
+  workspace_id      Int?
+  action            String?
+  details           String?  @default("{}")
+  ip_address        String?
+  user_agent        String?
+  status            String   @default("success")
+  error_message     String?
+  timestamp         DateTime @default(now())
+  user              users?   @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  workspace         workspaces? @relation(fields: [workspace_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id])
+  @@index([workspace_id])
+  @@index([event_type])
+  @@index([timestamp])
+}
+
+model sso_integrations {
+  id                  Int     @id @default(autoincrement())
+  workspace_id        Int
+  type                String
+  name                String
+  enabled             Boolean @default(false)
+  saml_entity_id      String?
+  saml_sso_url        String?
+  saml_x509_cert      String?
+  oauth_client_id     String?
+  oauth_client_secret String?
+  oauth_scopes        String? @default("openid,profile,email")
+  attribute_mapping   String? @default("{}")
+  group_mapping       String? @default("{}")
+  jit_enabled         Boolean @default(true)
+  metadata            String? @default("{}")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  workspace           workspaces @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+
+  @@index([workspace_id])
+}
+
+model user_sso_accounts {
+  id                  Int      @id @default(autoincrement())
+  user_id             Int
+  provider            String
+  provider_user_id    String
+  email               String
+  name                String?
+  picture_url         String?
+  metadata            String?  @default("{}")
+  last_login          DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider, provider_user_id])
+  @@index([user_id])
+  @@index([provider])
+}
+
+model sso_oauth_tokens {
+  id                    Int      @id @default(autoincrement())
+  user_sso_account_id   Int
+  access_token          String
+  refresh_token         String?
+  token_type            String   @default("Bearer")
+  expires_at            DateTime
+  scopes                String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user_sso_account      user_sso_accounts @relation(fields: [user_sso_account_id], references: [id], onDelete: Cascade)
+
+  @@index([user_sso_account_id])
+}
+
+model mfa_settings {
+  id                      Int      @id @default(autoincrement())
+  user_id                 Int      @unique
+  totp_enabled            Boolean  @default(false)
+  totp_secret             String?
+  totp_verified           Boolean  @default(false)
+  backup_codes_enabled    Boolean  @default(false)
+  backup_codes            String?
+  backup_codes_used       String?  @default("[]")
+  last_mfa_challenge      DateTime?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  user                    users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model mfa_recovery_sessions {
+  id              Int      @id @default(autoincrement())
+  user_id         Int
+  token           String   @unique
+  expires_at      DateTime
+  used            Boolean  @default(false)
+  used_at         DateTime?
+  createdAt       DateTime @default(now())
+  user            users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+model ip_whitelist {
+  id              Int      @id @default(autoincrement())
+  user_id         Int
+  ip_address      String
+  description     String?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  user            users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, ip_address])
+  @@index([user_id])
+}
+
+model device_fingerprints {
+  id              Int      @id @default(autoincrement())
+  user_id         Int
+  fingerprint     String   @unique
+  device_name     String?
+  browser         String?
+  os              String?
+  trust_token     String?
+  trusted         Boolean  @default(false)
+  last_used       DateTime @default(now())
+  createdAt       DateTime @default(now())
+  user            users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+model user_sessions {
+  id              Int      @id @default(autoincrement())
+  user_id         Int
+  session_token   String   @unique
+  ip_address      String?
+  user_agent      String?
+  fingerprint     String?
+  last_activity   DateTime @default(now())
+  expires_at      DateTime
+  createdAt       DateTime @default(now())
+  user            users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([session_token])
+}
+
+model login_attempts {
+  id              Int      @id @default(autoincrement())
+  user_id         Int?
+  email           String?
+  ip_address      String
+  success         Boolean
+  failure_reason  String?
+  timestamp       DateTime @default(now())
+  user            users?   @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id])
+  @@index([email])
+  @@index([ip_address])
+  @@index([timestamp])
 }

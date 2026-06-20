@@ -84,9 +84,10 @@ async function recentChatHistory({
 /**
  * Returns the base prompt for the chat with memories appended (when enabled).
  * Also does variable substitution on the prompt if there are any defined variables.
+ * Optionally enhances prompt with Chain-of-Thought (CoT) reasoning instructions.
  * @param {Object|null} workspace - the workspace object
  * @param {Object|null} user - the user object
- * @param {{prompt?: string, rawHistory?: object[]}} [opts] - current user message + chat history, used for reranking injected memories
+ * @param {{prompt?: string, rawHistory?: object[], includeReasoning?: boolean}} [opts] - current user message + chat history, used for reranking injected memories
  * @returns {Promise<string>}
  */
 async function chatPrompt(workspace, user = null, opts = {}) {
@@ -94,11 +95,27 @@ async function chatPrompt(workspace, user = null, opts = {}) {
   const { promptWithMemories } = require("../memories");
   const basePrompt =
     workspace?.openAiPrompt ?? SystemSettings.saneDefaultSystemPrompt;
-  const systemPrompt = await SystemPromptVariables.expandSystemPromptVariables(
+  let systemPrompt = await SystemPromptVariables.expandSystemPromptVariables(
     basePrompt,
     user?.id,
     workspace?.id
   );
+
+  // Enhance prompt with Chain-of-Thought reasoning instructions
+  if (opts.includeReasoning === true) {
+    const reasoningInstruction = `
+
+## Reasoning Mode
+Please provide detailed step-by-step reasoning before giving your final answer. Break down your thinking process into clear, numbered steps:
+1. First, analyze the question/request
+2. Consider relevant information and context
+3. Work through the logic or calculations
+4. Draw conclusions
+
+Then provide your final answer.`;
+    systemPrompt += reasoningInstruction;
+  }
+
   return promptWithMemories({
     systemPrompt,
     userId: user?.id ?? null,

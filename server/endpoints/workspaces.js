@@ -1171,6 +1171,10 @@ function workspaceEndpoints(app) {
 
   // Parsed Files in separate endpoint just to keep the workspace endpoints clean
   workspaceParsedFilesEndpoints(app);
+
+  // Knowledge Graph endpoints
+  const knowledgeGraphRouter = require("./knowledgeGraph");
+  app.use("/v1/workspace", knowledgeGraphRouter);
 }
 
 module.exports = { workspaceEndpoints };

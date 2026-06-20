@@ -91,6 +91,7 @@ const TRANSLATIONS = {
     "text-splitting": "Text Splitter & Chunking",
     "voice-speech": "Voice & Speech",
     "vector-database": "Vector Database",
+    "local-models": "Local Models",
     embeds: "Chat Embed",
     security: "Security",
     "event-logs": "Event Logs",
