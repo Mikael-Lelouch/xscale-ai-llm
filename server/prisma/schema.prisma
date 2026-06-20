@@ -445,6 +445,18 @@ model memories {
   @@index([userId, scope])
 }
 
+model local_model_configs {
+  id            Int      @id @default(autoincrement())
+  providerId    String   @unique
+  isEnabled     Boolean  @default(false)
+  baseUrl       String
+  temperature   Float    @default(0.7)
+  maxTokens     Int      @default(2048)
+  defaultModel  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 model model_routers {
   id                Int                  @id @default(autoincrement())
   name              String               @unique
