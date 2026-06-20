@@ -153,6 +153,8 @@ model workspaces {
   prompt_history               prompt_history[]
   workspace_parsed_files       workspace_parsed_files[]
   memories                     memories[]
+  knowledge_graph_nodes        knowledge_graph_nodes[]
+  knowledge_graph_edges        knowledge_graph_edges[]
 }
 
 model workspace_threads {
@@ -522,6 +524,51 @@ model model_router_rules {
   @@index([router_id, enabled, priority])
 }
 
+// Knowledge Graph Models for PHASE 3
+model knowledge_graph_nodes {
+  id              Int                          @id @default(autoincrement())
+  uuid            String                       @unique @default(uuid())
+  workspaceId     Int
+  nodeType        String                       @default("concept") // concept, document
+  label           String
+  description     String?
+  docId           String? // For document nodes, references workspace_documents.docId
+  category        String? // For concepts: extracted category (e.g., person, organization, topic)
+  embeddings      String? // JSON array for semantic similarity
+  metadata        String? @default("{}") // JSON metadata (keywords, confidence, etc.)
+  createdAt       DateTime                     @default(now())
+  updatedAt       DateTime                     @updatedAt
+  workspace       workspaces                   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  outgoingEdges   knowledge_graph_edges[]      @relation("fromNode")
+  incomingEdges   knowledge_graph_edges[]      @relation("toNode")
+
+  @@index([workspaceId])
+  @@index([nodeType])
+  @@index([docId])
+}
+
+model knowledge_graph_edges {
+  id              Int                          @id @default(autoincrement())
+  uuid            String                       @unique @default(uuid())
+  workspaceId     Int
+  fromNodeId      Int
+  toNodeId        Int
+  relationshipType String                      // references, related, similar, contradicts, mentions
+  weight          Float                        @default(50.0) // 0-100% relationship strength
+  confidence      Float                        @default(0.5) // 0-1.0 confidence score
+  reasoning       String? // Why this relationship exists
+  metadata        String? @default("{}") // JSON metadata
+  createdAt       DateTime                     @default(now())
+  updatedAt       DateTime                     @updatedAt
+  workspace       workspaces                   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  fromNode        knowledge_graph_nodes       @relation("fromNode", fields: [fromNodeId], references: [id], onDelete: Cascade)
+  toNode          knowledge_graph_nodes       @relation("toNode", fields: [toNodeId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@index([fromNodeId])
+  @@index([toNodeId])
+  @@index([relationshipType])
+}
 model agent_flow_executions {
   id            Int        @id @default(autoincrement())
   flowUuid      String
