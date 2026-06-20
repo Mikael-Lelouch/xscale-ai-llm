@@ -590,3 +590,172 @@ model agent_flow_executions {
   @@index([createdBy])
   @@index([startedAt])
 }
+
+model audit_logs {
+  id                Int      @id @default(autoincrement())
+  event_type        String
+  resource_type     String?
+  resource_id       Int?
+  user_id           Int?
+  workspace_id      Int?
+  action            String?
+  details           String?  @default("{}")
+  ip_address        String?
+  user_agent        String?
+  status            String   @default("success")
+  error_message     String?
+  timestamp         DateTime @default(now())
+  user              users?   @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  workspace         workspaces? @relation(fields: [workspace_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id])
+  @@index([workspace_id])
+  @@index([event_type])
+  @@index([timestamp])
+}
+
+model sso_integrations {
+  id                  Int     @id @default(autoincrement())
+  workspace_id        Int
+  type                String
+  name                String
+  enabled             Boolean @default(false)
+  saml_entity_id      String?
+  saml_sso_url        String?
+  saml_x509_cert      String?
+  oauth_client_id     String?
+  oauth_client_secret String?
+  oauth_scopes        String? @default("openid,profile,email")
+  attribute_mapping   String? @default("{}")
+  group_mapping       String? @default("{}")
+  jit_enabled         Boolean @default(true)
+  metadata            String? @default("{}")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  workspace           workspaces @relation(fields: [workspace_id], references: [id], onDelete: Cascade)
+
+  @@index([workspace_id])
+}
+
+model user_sso_accounts {
+  id                  Int      @id @default(autoincrement())
+  user_id             Int
+  provider            String
+  provider_user_id    String
+  email               String
+  name                String?
+  picture_url         String?
+  metadata            String?  @default("{}")
+  last_login          DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider, provider_user_id])
+  @@index([user_id])
+  @@index([provider])
+}
+
+model sso_oauth_tokens {
+  id                    Int      @id @default(autoincrement())
+  user_sso_account_id   Int
+  access_token          String
+  refresh_token         String?
+  token_type            String   @default("Bearer")
+  expires_at            DateTime
+  scopes                String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user_sso_account      user_sso_accounts @relation(fields: [user_sso_account_id], references: [id], onDelete: Cascade)
+
+  @@index([user_sso_account_id])
+}
+
+model mfa_settings {
+  id                      Int      @id @default(autoincrement())
+  user_id                 Int      @unique
+  totp_enabled            Boolean  @default(false)
+  totp_secret             String?
+  totp_verified           Boolean  @default(false)
+  backup_codes_enabled    Boolean  @default(false)
+  backup_codes            String?
+  backup_codes_used       String?  @default("[]")
+  last_mfa_challenge      DateTime?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  user                    users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model mfa_recovery_sessions {
+  id              Int      @id @default(autoincrement())
+  user_id         Int
+  token           String   @unique
+  expires_at      DateTime
+  used            Boolean  @default(false)
+  used_at         DateTime?
+  createdAt       DateTime @default(now())
+  user            users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+model ip_whitelist {
+  id              Int      @id @default(autoincrement())
+  user_id         Int
+  ip_address      String
+  description     String?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  user            users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, ip_address])
+  @@index([user_id])
+}
+
+model device_fingerprints {
+  id              Int      @id @default(autoincrement())
+  user_id         Int
+  fingerprint     String   @unique
+  device_name     String?
+  browser         String?
+  os              String?
+  trust_token     String?
+  trusted         Boolean  @default(false)
+  last_used       DateTime @default(now())
+  createdAt       DateTime @default(now())
+  user            users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+model user_sessions {
+  id              Int      @id @default(autoincrement())
+  user_id         Int
+  session_token   String   @unique
+  ip_address      String?
+  user_agent      String?
+  fingerprint     String?
+  last_activity   DateTime @default(now())
+  expires_at      DateTime
+  createdAt       DateTime @default(now())
+  user            users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([session_token])
+}
+
+model login_attempts {
+  id              Int      @id @default(autoincrement())
+  user_id         Int?
+  email           String?
+  ip_address      String
+  success         Boolean
+  failure_reason  String?
+  timestamp       DateTime @default(now())
+  user            users?   @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id])
+  @@index([email])
+  @@index([ip_address])
+  @@index([timestamp])
+}
