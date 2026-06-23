@@ -15,6 +15,14 @@ require("dotenv").config({
 const prisma = require("../utils/prisma");
 const { generateRecoveryCodes } = require("../utils/PasswordRecovery");
 
+/**
+ * Retrieves admin user and generates new recovery codes
+ * Displays the 4 recovery codes and instructions for account recovery
+ * User needs any 2 of 4 codes to recover their account
+ * @async
+ * @returns {Promise<void>}
+ * @throws {Error} If admin user is not found or code generation fails
+ */
 async function recoverAdminPassword() {
   try {
     console.log("🔍 Looking for admin user...\n");

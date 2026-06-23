@@ -23,6 +23,11 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
+/**
+ * Prompts user for input via CLI
+ * @param {string} question - Question to display to the user
+ * @returns {Promise<string>} User's input response
+ */
 function prompt(question) {
   return new Promise((resolve) => {
     rl.question(question, (answer) => {
@@ -31,6 +36,13 @@ function prompt(question) {
   });
 }
 
+/**
+ * Creates an admin user account with recovery codes
+ * Prompts for username and password if not provided as CLI arguments
+ * Generates and displays 4 recovery codes for account recovery
+ * @async
+ * @returns {Promise<void>}
+ */
 async function setupAdmin() {
   try {
     console.log("\n═══════════════════════════════════════════════════");
