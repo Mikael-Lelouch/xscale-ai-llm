@@ -15,7 +15,7 @@ import { useSidebarToggle, ToggleSidebarButton } from "./SidebarToggle";
 import SearchBox from "./SearchBox";
 import { Tooltip } from "react-tooltip";
 import { createPortal } from "react-dom";
-import SovereigntyBadge, { useDeploymentMode } from "../SovereigntyBadge";
+import SovereigntyBadge, { getDeploymentMode } from "../SovereigntyBadge";
 
 export default function Sidebar() {
   const { user } = useUser();
@@ -31,7 +31,7 @@ export default function Sidebar() {
 
   useEffect(() => {
     async function detectMode() {
-      const detectedMode = await useDeploymentMode();
+      const detectedMode = await getDeploymentMode();
       setDeploymentMode(detectedMode);
     }
     detectMode();

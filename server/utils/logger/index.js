@@ -2,9 +2,17 @@ const winston = require("winston");
 const path = require("path");
 const fs = require("fs");
 
+/**
+ * Logger singleton class for centralized logging
+ * Uses Winston in production and console in development
+ */
 class Logger {
   logger = console;
   static _instance;
+
+  /**
+   * Creates or returns existing Logger singleton instance
+   */
   constructor() {
     if (Logger._instance) return Logger._instance;
     this.logger =
@@ -12,6 +20,10 @@ class Logger {
     Logger._instance = this;
   }
 
+  /**
+   * Creates and configures a Winston logger instance with file and console transports
+   * @returns {winston.Logger} Configured Winston logger instance
+   */
   getWinstonLogger() {
     const logDir = process.env.LOG_DIR || "./storage/logs";
     const logLevel = process.env.LOG_LEVEL || "info";
@@ -70,15 +82,20 @@ class Logger {
       transports,
     });
 
+    /**
+     * Formats log arguments for consistent output
+     * @param {Array} args - Log arguments to format
+     * @returns {string} Formatted log message
+     */
     function formatArgs(args) {
       return args
         .map((arg) => {
           if (arg instanceof Error) {
-            return arg.stack; // If argument is an Error object, return its stack trace
+            return arg.stack;
           } else if (typeof arg === "object") {
-            return JSON.stringify(arg); // Convert objects to JSON string
+            return JSON.stringify(arg);
           } else {
-            return arg; // Otherwise, return as-is
+            return arg;
           }
         })
         .join(" ");
@@ -95,11 +112,13 @@ class Logger {
     };
     return logger;
   }
+}
 
 /**
- * Sets and overrides Console methods for logging when called.
- * This is a singleton method and will not create multiple loggers.
- * @returns {winston.Logger | console} - instantiated logger interface.
+ * Initializes and sets up the logger singleton
+ * Overrides console.log, console.error, and console.info methods
+ * This is a singleton method and will not create multiple loggers
+ * @returns {winston.Logger|console} Instantiated logger interface (Winston in production, console in development)
  */
 function setLogger() {
   return new Logger().logger;

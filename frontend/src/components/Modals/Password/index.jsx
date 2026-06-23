@@ -8,7 +8,7 @@ import {
   AUTH_TIMESTAMP,
 } from "../../../utils/constants";
 import useLogo from "../../../hooks/useLogo";
-import SovereigntyBadge, { useDeploymentMode } from "../../SovereigntyBadge";
+import SovereigntyBadge, { getDeploymentMode } from "../../SovereigntyBadge";
 
 export default function PasswordModal({ mode = "single" }) {
   const { loginLogo, isCustomLogo } = useLogo();
@@ -16,7 +16,7 @@ export default function PasswordModal({ mode = "single" }) {
 
   useEffect(() => {
     async function detectMode() {
-      const detectedMode = await useDeploymentMode();
+      const detectedMode = await getDeploymentMode();
       setDeploymentMode(detectedMode);
     }
     detectMode();

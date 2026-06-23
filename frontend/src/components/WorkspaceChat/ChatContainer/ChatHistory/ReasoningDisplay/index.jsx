@@ -20,15 +20,11 @@ export default function ReasoningDisplay({
   onToggleExpanded = null,
 }) {
   const [expandedSteps, setExpandedSteps] = useState(
-    new Set(steps.map((_, idx) => idx))
+    new Set(steps && steps.length > 0 ? steps.map((_, idx) => idx) : [])
   );
   const [editingStep, setEditingStep] = useState(null);
   const [editText, setEditText] = useState("");
   const [copiedStep, setCopiedStep] = useState(null);
-
-  if (!steps || steps.length === 0) {
-    return null;
-  }
 
   const toggleStepExpanded = useCallback((stepIdx) => {
     setExpandedSteps((prev) => {
@@ -71,6 +67,10 @@ export default function ReasoningDisplay({
     setEditingStep(null);
     setEditText("");
   }, []);
+
+  if (!steps || steps.length === 0) {
+    return null;
+  }
 
   return (
     <div className="bg-zinc-900 light:bg-slate-50 border border-zinc-700 light:border-slate-300 rounded-lg p-4 mb-4 w-full">

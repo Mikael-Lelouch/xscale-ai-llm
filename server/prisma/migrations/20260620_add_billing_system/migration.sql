@@ -40,6 +40,7 @@ CREATE TABLE "usage_metrics" (
     "billing_period_end" DATETIME NOT NULL,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "usage_metrics_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "usage_metrics_workspace_tier_id_fkey" FOREIGN KEY ("workspace_tier_id") REFERENCES "workspace_tiers" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -67,6 +68,7 @@ CREATE TABLE "billing_invoices" (
     "email_sent_at" DATETIME,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "billing_invoices_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "billing_invoices_workspace_tier_id_fkey" FOREIGN KEY ("workspace_tier_id") REFERENCES "workspace_tiers" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -88,6 +90,7 @@ CREATE TABLE "stripe_subscriptions" (
     "metadata" TEXT,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "stripe_subscriptions_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "stripe_subscriptions_workspace_tier_id_fkey" FOREIGN KEY ("workspace_tier_id") REFERENCES "workspace_tiers" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
@@ -106,7 +109,8 @@ CREATE TABLE "payment_methods" (
     "account_bank_name" TEXT,
     "is_default" BOOLEAN NOT NULL DEFAULT 0,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "payment_methods_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable usage_warnings
@@ -121,7 +125,8 @@ CREATE TABLE "usage_warnings" (
     "acknowledged" BOOLEAN NOT NULL DEFAULT 0,
     "acknowledged_at" DATETIME,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "usage_warnings_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateIndex workspace_tiers
@@ -155,3 +160,7 @@ CREATE INDEX "payment_methods_stripe_payment_method_id_idx" ON "payment_methods"
 CREATE INDEX "usage_warnings_workspace_id_idx" ON "usage_warnings"("workspace_id");
 CREATE INDEX "usage_warnings_warning_type_idx" ON "usage_warnings"("warning_type");
 CREATE INDEX "usage_warnings_created_at_idx" ON "usage_warnings"("created_at");
+
+-- Note: Foreign key constraints are already defined in CREATE TABLE statements above
+-- SQLite does not support ALTER TABLE ADD CONSTRAINT for foreign keys
+-- The workspace_id foreign keys are enforced through the table definitions

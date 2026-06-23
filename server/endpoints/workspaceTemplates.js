@@ -10,6 +10,9 @@ const router = Router();
 /**
  * GET /workspace-templates
  * Get all active workspace templates for gallery view
+ * @async
+ * @param {express.Request} request - Express request object
+ * @param {express.Response} response - Express response object with templates array
  */
 router.get("/", async (request, response) => {
   try {
@@ -27,6 +30,9 @@ router.get("/", async (request, response) => {
 /**
  * GET /workspace-templates/with-usage
  * Get all active templates with usage statistics
+ * @async
+ * @param {express.Request} request - Express request object
+ * @param {express.Response} response - Express response object with templates and usage data
  */
 router.get("/with-usage", async (request, response) => {
   try {
@@ -44,6 +50,9 @@ router.get("/with-usage", async (request, response) => {
 /**
  * GET /workspace-templates/:slug
  * Get a specific template by slug
+ * @async
+ * @param {express.Request} request - Express request object with slug parameter
+ * @param {express.Response} response - Express response object with template data
  */
 router.get("/:slug", async (request, response) => {
   try {
@@ -70,6 +79,10 @@ router.get("/:slug", async (request, response) => {
 /**
  * POST /workspace-templates
  * Create a new template (admin only)
+ * @async
+ * @param {express.Request} request - Express request object with template data
+ * @param {express.Response} response - Express response object with created template
+ * @requires admin role
  */
 router.post(
   "/",
@@ -123,6 +136,10 @@ router.post(
 /**
  * PUT /workspace-templates/:id
  * Update a template (admin only)
+ * @async
+ * @param {express.Request} request - Express request object with template updates
+ * @param {express.Response} response - Express response object with updated template
+ * @requires admin role
  */
 router.put(
   "/:id",
@@ -158,6 +175,10 @@ router.put(
 /**
  * DELETE /workspace-templates/:id
  * Delete a template (admin only)
+ * @async
+ * @param {express.Request} request - Express request object with template id parameter
+ * @param {express.Response} response - Express response object with success status
+ * @requires admin role
  */
 router.delete(
   "/:id",
@@ -188,6 +209,10 @@ router.delete(
 /**
  * POST /workspace-templates/:templateId/documents
  * Add a document to a template (admin only)
+ * @async
+ * @param {express.Request} request - Express request object with document data
+ * @param {express.Response} response - Express response object with created document
+ * @requires admin role
  */
 router.post(
   "/:templateId/documents",
@@ -228,6 +253,10 @@ router.post(
 /**
  * POST /workspace-templates/:templateId/flows
  * Add a flow to a template (admin only)
+ * @async
+ * @param {express.Request} request - Express request object with flow configuration
+ * @param {express.Response} response - Express response object with created flow
+ * @requires admin role
  */
 router.post(
   "/:templateId/flows",
@@ -265,4 +294,15 @@ router.post(
   }
 );
 
-module.exports = { router };
+/**
+ * Registers workspace template endpoints on the provided Express app/router.
+ * Mounts the workspace templates router at the /v1/workspace-templates path.
+ *
+ * @param {express.Router|express.Application} app - Express router or app instance to register endpoints on
+ * @returns {void}
+ */
+function workspaceTemplateEndpoints(app) {
+  app.use("/v1/workspace-templates", router);
+}
+
+module.exports = { workspaceTemplateEndpoints };
