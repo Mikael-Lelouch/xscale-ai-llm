@@ -26,8 +26,8 @@ chmod 775 /app/server/storage 2>/dev/null || true
   cd /app/server/ &&
     # Disable Prisma CLI telemetry (https://www.prisma.io/docs/orm/tools/prisma-cli#how-to-opt-out-of-data-collection)
     export CHECKPOINT_DISABLE=1 &&
-    npx prisma generate --schema=./prisma/schema.prisma &&
-    npx prisma migrate deploy --schema=./prisma/schema.prisma &&
+    npx prisma generate --schema=./prisma/schema.prisma && \
+    npx prisma db push --schema=./prisma/schema.prisma --accept-data-loss && \
     node /app/server/index.js
 } &
 { node /app/collector/index.js; } &
