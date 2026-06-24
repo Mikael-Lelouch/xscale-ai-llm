@@ -150,7 +150,9 @@ ENV npm_config_fetch_retry_maxtimeout=120000
 COPY ./frontend/package.json ./frontend/yarn.lock ./
 RUN yarn install --network-timeout 600000 && yarn cache clean
 COPY ./frontend/ ./
-RUN yarn build
+# Use cache-busting build arg to force rebuild
+ARG BUILD_CACHE_BUSTER
+RUN yarn build && echo "Frontend build completed at $(date)"
 WORKDIR /app
 
 # Install server layer
