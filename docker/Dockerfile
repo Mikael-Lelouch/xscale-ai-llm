@@ -148,7 +148,8 @@ ENV npm_config_fetch_retry_mintimeout=20000
 ENV npm_config_fetch_retry_maxtimeout=120000
 
 COPY ./frontend/package.json ./frontend/yarn.lock ./
-RUN yarn install --network-timeout 600000 && yarn cache clean
+# Explicit --production=false to force devDependencies install even if NODE_ENV=production
+RUN yarn install --production=false --network-timeout 600000 && yarn cache clean
 COPY ./frontend/ ./
 # Use cache-busting build arg to force rebuild
 ARG BUILD_CACHE_BUSTER
