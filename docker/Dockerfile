@@ -208,9 +208,8 @@ ENV DEPLOYMENT_VERSION=1.14.2
 
 # Setup the healthcheck
 RUN chmod +x /usr/local/bin/docker-healthcheck.sh
-# Disabled - Coolify handles external healthcheck on the FQDN
-# HEALTHCHECK --interval=1m --timeout=10s --start-period=1m \
-#   CMD /bin/bash /usr/local/bin/docker-healthcheck.sh || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=6 \
+  CMD /bin/bash /usr/local/bin/docker-healthcheck.sh || exit 1
 
 # Drop back to non-root for runtime
 USER anythingllm
