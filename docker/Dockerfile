@@ -151,6 +151,7 @@ ENV npm_config_fetch_retry_maxtimeout=120000
 COPY ./frontend/package.json ./frontend/yarn.lock ./
 RUN yarn install --network-timeout 600000 && yarn cache clean
 COPY ./frontend/ ./
+ENV PATH="./node_modules/.bin:${PATH}"
 RUN yarn build
 WORKDIR /app
 
