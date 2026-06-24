@@ -135,9 +135,14 @@ USER anythingllm
 WORKDIR /app
 
 # Install & Build frontend layer
-# We build inside the build stage itself (which has node+yarn from build-amd64)
-# IMPORTANT: Override NODE_ENV to ensure devDependencies (vite, etc.) are installed
+# Use BUILDPLATFORM to run on the native host architecture (not emulated).
+# This avoids esbuild crashing under QEMU when cross-compiling.
+# The output (static HTML/CSS/JS) is platform-independent.
+FROM --platform=$BUILDPLATFORM node:18-slim AS frontend-build
+
+# Override NODE_ENV to ensure devDependencies (vite, etc.) are installed
 ENV NODE_ENV=development
+
 WORKDIR /app/frontend
 
 # Configure yarn for robust network handling
@@ -148,12 +153,9 @@ ENV npm_config_fetch_retry_mintimeout=20000
 ENV npm_config_fetch_retry_maxtimeout=120000
 
 COPY ./frontend/package.json ./frontend/yarn.lock ./
-# Explicit --production=false to force devDependencies install even if NODE_ENV=production
-RUN yarn install --production=false --network-timeout 600000 && yarn cache clean
+RUN yarn install --network-timeout 600000 && yarn cache clean
 COPY ./frontend/ ./
-# Use cache-busting build arg to force rebuild
-ARG BUILD_CACHE_BUSTER
-RUN yarn build && echo "Frontend build completed at $(date)"
+RUN yarn build
 WORKDIR /app
 
 # Install server layer
@@ -192,7 +194,7 @@ USER anythingllm
 # Since we are building from backend-build we just need to move built frontend into server/public
 FROM backend-build AS production-build
 WORKDIR /app
-COPY --chown=anythingllm:anythingllm /app/frontend/dist /app/server/public
+COPY --chown=anythingllm:anythingllm --from=frontend-build /app/frontend/dist /app/server/public
 
 # Pre-create the storage directory with correct ownership so it survives volume mounts.
 # Must run as root so the directory exists in the image layer before USER anythingllm.
