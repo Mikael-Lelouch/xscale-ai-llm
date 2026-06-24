@@ -207,10 +207,10 @@ ENV ANYTHING_LLM_RUNTIME=docker
 ENV DEPLOYMENT_VERSION=1.14.2
 
 # Setup the healthcheck
-COPY docker/docker-healthcheck.sh /usr/local/bin/docker-healthcheck.sh
 RUN chmod +x /usr/local/bin/docker-healthcheck.sh
-HEALTHCHECK --interval=1m --timeout=10s --start-period=1m \
-  CMD /bin/bash /usr/local/bin/docker-healthcheck.sh || exit 1
+# Disabled - Coolify handles external healthcheck on the FQDN
+# HEALTHCHECK --interval=1m --timeout=10s --start-period=1m \
+#   CMD /bin/bash /usr/local/bin/docker-healthcheck.sh || exit 1
 
 # Drop back to non-root for runtime
 USER anythingllm
