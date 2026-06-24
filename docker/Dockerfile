@@ -135,10 +135,7 @@ USER anythingllm
 WORKDIR /app
 
 # Install & Build frontend layer
-# Use BUILDPLATFORM to run on the native host architecture (not emulated).
-# This avoids esbuild crashing under QEMU when cross-compiling.
-# The output (static HTML/CSS/JS) is platform-independent.
-FROM --platform=$BUILDPLATFORM node:18-slim AS frontend-build
+# We build inside the build stage itself (which has node+yarn from build-amd64)
 WORKDIR /app/frontend
 
 # Configure yarn for robust network handling
@@ -151,7 +148,6 @@ ENV npm_config_fetch_retry_maxtimeout=120000
 COPY ./frontend/package.json ./frontend/yarn.lock ./
 RUN yarn install --network-timeout 600000 && yarn cache clean
 COPY ./frontend/ ./
-ENV PATH="./node_modules/.bin:${PATH}"
 RUN yarn build
 WORKDIR /app
 
@@ -191,7 +187,7 @@ USER anythingllm
 # Since we are building from backend-build we just need to move built frontend into server/public
 FROM backend-build AS production-build
 WORKDIR /app
-COPY --chown=anythingllm:anythingllm --from=frontend-build /app/frontend/dist /app/server/public
+COPY --chown=anythingllm:anythingllm /app/frontend/dist /app/server/public
 
 # Pre-create the storage directory with correct ownership so it survives volume mounts.
 # Must run as root so the directory exists in the image layer before USER anythingllm.
