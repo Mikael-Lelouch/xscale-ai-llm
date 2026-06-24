@@ -220,8 +220,6 @@ const TRANSLATIONS = {
       "desc-start":
         "The number of previous chats that will be included in the response's short-term memory.",
       recommend: "Recommend 20. ",
-      "desc-end":
-        "Anything more than 45 is likely to lead to continuous chat failures depending on message size.",
     },
     prompt: {
       title: "System Prompt",
@@ -252,11 +250,8 @@ const TRANSLATIONS = {
     },
     temperature: {
       title: "LLM Temperature",
-      "desc-start":
-        'This setting controls how "creative" your LLM responses will be.',
       "desc-end":
         "The higher the number the more creative. For some models this can lead to incoherent responses when set too high.",
-      hint: "Most LLMs have various acceptable ranges of valid values. Consult your LLM provider for that information.",
     },
   },
   "vector-workspace": {

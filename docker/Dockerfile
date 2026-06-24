@@ -200,7 +200,7 @@ RUN mkdir -p /app/server/storage && chown -R anythingllm:anythingllm /app/server
 # Setup the environment
 ENV NODE_ENV=production
 ENV ANYTHING_LLM_RUNTIME=docker
-ENV DEPLOYMENT_VERSION=1.14.1
+ENV DEPLOYMENT_VERSION=1.14.2
 
 # Setup the healthcheck
 COPY docker/docker-healthcheck.sh /usr/local/bin/docker-healthcheck.sh
