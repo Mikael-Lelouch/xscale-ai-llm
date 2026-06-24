@@ -136,6 +136,8 @@ WORKDIR /app
 
 # Install & Build frontend layer
 # We build inside the build stage itself (which has node+yarn from build-amd64)
+# IMPORTANT: Override NODE_ENV to ensure devDependencies (vite, etc.) are installed
+ENV NODE_ENV=development
 WORKDIR /app/frontend
 
 # Configure yarn for robust network handling
