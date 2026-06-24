@@ -4,11 +4,11 @@ const { UsageMetrics } = require("../models/usageMetrics");
 const { BillingInvoice } = require("../models/billingInvoice");
 const { UsageWarning } = require("../models/usageWarning");
 const { StripeSubscription } = require("../models/stripeSubscription");
-const { validatedRequest } = require("../utils/http");
+const { validatedRequest } = require("../utils/middleware/validatedRequest");
 const {
-  validWorkspaceKey,
-  validApiKey,
-} = require("../middleware/validApiKey");
+  flexUserRoleValid,
+  ROLES,
+} = require("../utils/middleware/multiUserProtected");
 const prisma = require("../utils/prisma");
 
 function billingEndpoints(app) {
@@ -20,7 +20,7 @@ function billingEndpoints(app) {
    */
   router.get(
     "/v1/billing/workspace/:workspaceId/subscription",
-    [validWorkspaceKey],
+    [validatedRequest],
     async (request, response) => {
       try {
         const { workspaceId } = request.params;
@@ -87,7 +87,7 @@ function billingEndpoints(app) {
    */
   router.get(
     "/v1/billing/workspace/:workspaceId/usage",
-    [validWorkspaceKey],
+    [validatedRequest],
     async (request, response) => {
       try {
         const { workspaceId } = request.params;
@@ -132,7 +132,7 @@ function billingEndpoints(app) {
    */
   router.get(
     "/v1/billing/workspace/:workspaceId/invoices",
-    [validWorkspaceKey],
+    [validatedRequest],
     async (request, response) => {
       try {
         const { workspaceId } = request.params;
@@ -175,7 +175,7 @@ function billingEndpoints(app) {
    */
   router.get(
     "/v1/billing/workspace/:workspaceId/invoices/:invoiceId/pdf",
-    [validWorkspaceKey],
+    [validatedRequest],
     async (request, response) => {
       try {
         const { invoiceId } = request.params;
@@ -210,7 +210,7 @@ function billingEndpoints(app) {
    */
   router.patch(
     "/v1/billing/workspace/:workspaceId/warnings/:warningId/acknowledge",
-    [validWorkspaceKey],
+    [validatedRequest],
     async (request, response) => {
       try {
         const { warningId } = request.params;
@@ -320,17 +320,9 @@ function billingEndpoints(app) {
    */
   router.get(
     "/v1/billing/admin/workspaces",
-    [validApiKey],
+    [validatedRequest, flexUserRoleValid([ROLES.admin])],
     async (request, response) => {
       try {
-        // Check admin role
-        if (request.user?.role !== "admin") {
-          return response.status(403).json({
-            success: false,
-            message: "Admin access required",
-          });
-        }
-
         const limit = Math.min(parseInt(request.query.limit) || 50, 200);
         const offset = parseInt(request.query.offset) || 0;
 
@@ -386,17 +378,9 @@ function billingEndpoints(app) {
    */
   router.get(
     "/v1/billing/admin/analytics",
-    [validApiKey],
+    [validatedRequest, flexUserRoleValid([ROLES.admin])],
     async (request, response) => {
       try {
-        // Check admin role
-        if (request.user?.role !== "admin") {
-          return response.status(403).json({
-            success: false,
-            message: "Admin access required",
-          });
-        }
-
         const now = new Date();
         const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
