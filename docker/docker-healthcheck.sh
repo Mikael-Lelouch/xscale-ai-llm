@@ -9,7 +9,7 @@ MAX_RETRIES=${HEALTHCHECK_RETRIES:-3}
 RETRY_DELAY=1
 
 for i in $(seq 1 $MAX_RETRIES); do
-  if curl -sf http://localhost:$PORT/api/health > /dev/null 2>&1; then
+  if curl -sf http://localhost:$PORT/api/ping > /dev/null 2>&1; then
     exit 0
   fi
 
