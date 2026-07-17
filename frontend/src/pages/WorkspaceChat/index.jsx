@@ -17,7 +17,7 @@ export default function WorkspaceChat() {
   }
 
   return (
-    <div className="xscale-shell w-screen h-screen overflow-hidden light:bg-slate-50 flex">
+    <div className="w-screen h-screen overflow-hidden bg-zinc-950 light:bg-slate-50 flex">
       {!isMobile && <Sidebar />}
       <ShowWorkspaceChat />
     </div>

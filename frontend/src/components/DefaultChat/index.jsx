@@ -56,15 +56,11 @@ export default function DefaultChatContainer() {
   if (loading) {
     return (
       <Layout>
-        <div className="xscale-grid w-full h-full flex flex-col items-center justify-center overflow-y-auto no-scroll">
-          {/* Logo skeleton */}
+        <div className="xscale-grid-bg w-full h-full flex flex-col items-center justify-center overflow-y-auto no-scroll">
           <div className="w-[140px] h-[140px] mb-5 rounded-lg bg-theme-bg-primary animate-pulse" />
-          {/* Title skeleton */}
           <div className="w-48 h-6 mb-4 rounded bg-theme-bg-primary animate-pulse" />
-          {/* Paragraph skeleton */}
           <div className="w-80 h-4 mb-2 rounded bg-theme-bg-primary animate-pulse" />
           <div className="w-64 h-4 rounded bg-theme-bg-primary animate-pulse" />
-          {/* Button skeleton */}
           <div className="mt-[29px] w-40 h-[34px] rounded-lg bg-theme-bg-primary animate-pulse" />
         </div>
       </Layout>
@@ -74,8 +70,9 @@ export default function DefaultChatContainer() {
   const hasWorkspaces = workspaces.length > 0;
   return (
     <Layout>
-      <div className="xscale-grid w-full h-full flex flex-col items-center justify-center overflow-y-auto no-scroll px-6 py-20">
-        <div className="animate-slideUp flex w-full max-w-2xl flex-col items-center text-center">
+      <div className="xscale-grid-bg w-full h-full flex flex-col items-center justify-center overflow-y-auto no-scroll px-6 py-20">
+        <div className="animate-xscale-slide-up flex w-full max-w-2xl flex-col items-center text-center">
+          {/* Logo in glass container */}
           <div className="xscale-glass mb-8 flex h-20 min-w-20 items-center justify-center rounded-2xl px-5">
             <img
               src={logo}
@@ -83,16 +80,23 @@ export default function DefaultChatContainer() {
               className="max-h-12 w-auto rounded object-contain"
             />
           </div>
+
+          {/* SOC badge */}
           <div className="mb-4 flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-300">
             <ShieldCheck size={14} weight="duotone" />
             XSCALE AI
           </div>
+
+          {/* Gradient heading */}
           <h1 className="xscale-gradient-text text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
             {t("home.welcome")}, {user.username}!
           </h1>
+
           <p className="mt-3 max-w-lg text-theme-home-text-secondary text-sm md:text-base text-center whitespace-pre-line leading-7">
             {hasWorkspaces ? t("home.chooseWorkspace") : t("home.notAssigned")}
           </p>
+
+          {/* CTA button */}
           {hasWorkspaces && (
             <NavLink
               to={paths.workspace.chat(
@@ -117,7 +121,7 @@ const Layout = ({ children }) => {
   return (
     <div
       style={{ height: isMobile ? "100%" : "calc(100% - 32px)" }}
-      className={`relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[20px] bg-theme-bg-secondary border border-white/[0.06] light:border-theme-sidebar-border w-full h-full overflow-y-scroll shadow-[0_20px_70px_rgba(0,0,0,0.25)] ${showScrollbar ? "show-scrollbar" : "no-scroll"}`}
+      className={`relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[20px] bg-theme-bg-secondary border border-white/[0.06] light:border-[1px] light:border-theme-sidebar-border w-full h-full overflow-y-scroll shadow-[0_20px_70px_rgba(0,0,0,0.25)] ${showScrollbar ? "show-scrollbar" : "no-scroll"}`}
     >
       {children}
     </div>

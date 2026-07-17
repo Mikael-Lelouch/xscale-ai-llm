@@ -49,7 +49,7 @@ export default function SettingsSidebar() {
   if (isMobile) {
     return (
       <>
-        <div className="xscale-glass fixed top-0 left-0 right-0 z-10 flex justify-between items-center px-4 py-2 light:bg-white text-theme-text-secondary h-16 rounded-none">
+        <div className="fixed top-0 left-0 right-0 z-10 flex justify-between items-center px-4 py-2 bg-theme-bg-sidebar light:bg-white text-theme-text-secondary shadow-lg h-16">
           <button
             onClick={() => setShowSidebar(true)}
             className="rounded-md p-2 flex items-center justify-center text-theme-text-secondary"
@@ -82,7 +82,7 @@ export default function SettingsSidebar() {
           />
           <div
             ref={sidebarRef}
-            className="xscale-glass h-[100vh] fixed top-0 left-0 rounded-r-[26px] w-[84%] max-w-[340px] p-[18px]"
+            className="h-[100vh] fixed top-0 left-0 rounded-r-[26px] bg-theme-bg-sidebar w-[80%] p-[18px]"
           >
             <div className="w-full h-full flex flex-col overflow-x-hidden items-between">
               {/* Header Information */}
@@ -125,7 +125,7 @@ export default function SettingsSidebar() {
                   </div>
                 </div>
               </div>
-              <div className="absolute bottom-2 left-0 right-0 pt-5 bg-gradient-to-t from-[#0a0e1a] via-[#0a0e1a]/95 to-transparent">
+              <div className="absolute bottom-2 left-0 right-0 pt-2 bg-theme-bg-sidebar bg-opacity-80 backdrop-filter backdrop-blur-md">
                 <Footer />
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function SettingsSidebar() {
         </Link>
         <div
           ref={sidebarRef}
-          className="xscale-glass transition-all duration-500 relative m-[16px] rounded-[20px] light:border-none min-w-[250px] p-[10px] h-[calc(100%-76px)]"
+          className="transition-all duration-500 relative m-[16px] rounded-[16px] bg-theme-bg-sidebar border-[2px] border-theme-sidebar-border light:border-none min-w-[250px] p-[10px] h-[calc(100%-76px)]"
         >
           <div className="w-full h-full flex flex-col overflow-x-hidden items-between min-w-[235px]">
             <div className="text-theme-text-secondary text-sm font-medium uppercase mt-[4px] mb-0 ml-2">

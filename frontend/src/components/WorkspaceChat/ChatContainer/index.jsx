@@ -451,16 +451,13 @@ export default function ChatContainer({
             workspace={workspace}
             threadSlug={activeThreadSlug}
           />
-          <div className="xscale-grid flex-1 min-w-0 relative md:rounded-[20px] light:bg-white w-full h-full overflow-hidden border border-white/[0.06] light:border-theme-modal-border shadow-[0_20px_70px_rgba(0,0,0,0.25)]">
+          <div className="flex-1 min-w-0 relative md:rounded-[20px] xscale-grid-bg light:bg-white w-full h-full overflow-hidden border border-white/[0.04] light:border-solid light:border light:border-theme-modal-border shadow-[0_16px_50px_rgba(0,0,0,0.2)]">
             {isMobile && <SidebarMobileHeader />}
             <WorkspaceModelPicker workspaceSlug={workspace.slug} />
             <DnDFileUploaderWrapper>
-              <div className="flex h-full w-full flex-col items-center justify-center overflow-y-auto px-4 py-24 md:px-8">
-                <div className="animate-slideUp flex w-full max-w-[790px] flex-col items-center">
-                  <div className="mb-5 rounded-full border border-cyan-400/20 bg-cyan-400/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-300">
-                    XSCALE AI
-                  </div>
-                  <h1 className="xscale-gradient-text mb-8 text-center text-3xl font-semibold tracking-[-0.035em] md:mb-10 md:text-[42px] md:leading-[1.1]">
+              <div className="flex flex-col h-full w-full items-center justify-center">
+                <div className="flex flex-col items-center w-full max-w-[750px]">
+                  <h1 className="xscale-gradient-text text-xl md:text-2xl mb-11 text-center font-semibold">
                     {t("main-page.greeting")}
                   </h1>
                   <PromptInput
@@ -504,14 +501,14 @@ export default function ChatContainer({
     <ChatSidebarProvider>
       <div
         style={{ height: isMobile ? "100%" : "calc(100% - 32px)" }}
-          className="relative flex md:ml-[2px] md:mr-[16px] md:my-[16px] w-full h-full z-[2]"
+        className="relative flex md:ml-[2px] md:mr-[16px] md:my-[16px] w-full h-full z-[2]"
       >
         <ChatSettingsMenu
           history={chatHistory}
           workspace={workspace}
           threadSlug={activeThreadSlug}
         />
-        <div className="xscale-grid flex-1 min-w-0 relative md:rounded-[20px] light:bg-white text-white light:text-slate-900 h-full overflow-hidden border border-white/[0.06] light:border-theme-modal-border shadow-[0_20px_70px_rgba(0,0,0,0.25)]">
+        <div className="flex-1 min-w-0 relative md:rounded-[16px] bg-zinc-900 light:bg-white text-white light:text-slate-900 h-full overflow-hidden border-none light:border-solid light:border light:border-theme-modal-border">
           {isMobile && <SidebarMobileHeader />}
           <WorkspaceModelPicker workspaceSlug={workspace.slug} />
           <DnDFileUploaderWrapper>

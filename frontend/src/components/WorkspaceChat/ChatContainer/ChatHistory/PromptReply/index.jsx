@@ -39,8 +39,8 @@ const PromptReply = ({ uuid, reply, pending, error, sources = [] }) => {
   }
 
   return (
-    <div key={uuid} className="animate-fadeIn flex justify-start w-full">
-      <div className="py-3 pl-1 pr-4 flex flex-col w-full">
+    <div key={uuid} className="flex justify-start w-full">
+      <div className="py-4 pl-0 pr-4 flex flex-col w-full">
         <RenderAssistantChatContent
           key={`${uuid}-prompt-reply-content`}
           message={reply}

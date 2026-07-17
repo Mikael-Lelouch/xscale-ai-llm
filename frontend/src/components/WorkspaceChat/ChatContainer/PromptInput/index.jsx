@@ -317,21 +317,21 @@ export default function PromptInput({
       className={
         centered
           ? "w-full relative flex justify-center items-center"
-            : "w-full fixed md:absolute bottom-0 left-0 z-10 flex justify-center items-center px-3 pwa:pb-5"
+          : "w-full fixed md:absolute bottom-0 left-0 z-10 flex justify-center items-center pwa:pb-5"
       }
     >
       <form
         onSubmit={handleSubmit}
         className={
           centered
-            ? "flex flex-col gap-y-1 w-full items-center"
-            : "flex flex-col gap-y-1 md:w-full w-full mx-auto max-w-[790px] items-center"
+            ? "flex flex-col gap-y-1 rounded-t-lg w-full items-center"
+            : "flex flex-col gap-y-1 rounded-t-lg md:w-full w-full mx-auto max-w-[750px] items-center"
         }
       >
         <div
-          className={`flex items-center md:w-full ${centered ? "mb-0" : "mb-4 md:mb-5"}`}
+          className={`flex items-center rounded-lg md:w-full ${centered ? "mb-0" : "mb-4"}`}
         >
-          <div className="relative w-full md:w-[790px]">
+          <div className="relative w-[95vw] md:w-[750px]">
             <ToolsMenu
               workspace={workspace}
               showing={showTools}
@@ -341,7 +341,7 @@ export default function PromptInput({
               centered={centered}
               highlightedIndexRef={toolsHighlightRef}
             />
-            <div className="xscale-composer light:bg-white light:border-slate-300 rounded-2xl pwa:rounded-3xl flex flex-col px-4 md:px-5 overflow-hidden">
+            <div className="xscale-composer rounded-[20px] pwa:rounded-3xl flex flex-col px-5 overflow-hidden">
               <AttachmentManager attachments={attachments} />
               <div className="flex items-center">
                 <textarea
@@ -361,7 +361,7 @@ export default function PromptInput({
                   }}
                   value={promptInput}
                   spellCheck={Appearance.get("enableSpellCheck")}
-                  className={`border-none cursor-text max-h-[50vh] md:max-h-[350px] md:min-h-[42px] pt-[18px] w-full leading-6 text-slate-100 light:text-slate-600 bg-transparent placeholder:text-slate-500 light:placeholder:text-slate-400 resize-none active:outline-none focus:outline-none flex-grow pwa:!text-[16px] ${textSizeClass}`}
+                  className={`border-none cursor-text max-h-[50vh] md:max-h-[350px] md:min-h-[40px] pt-[20px] w-full leading-5 text-white light:text-slate-600 bg-transparent placeholder:text-white/60 light:placeholder:text-slate-400 resize-none active:outline-none focus:outline-none flex-grow pwa:!text-[16px] ${textSizeClass}`}
                   placeholder={t("chat_window.send_message")}
                 />
               </div>
@@ -497,7 +497,7 @@ function SendPromptButton({ formRef, promptInput, isDisabled }) {
         disabled={isDisabled || !promptInput.trim().length}
         className={`border-none flex justify-center items-center rounded-full w-8 h-8 transition-all ${
           promptInput.trim().length && !isDisabled
-            ? "xscale-gradient-button cursor-pointer text-slate-950 hover:-translate-y-0.5"
+            ? "cursor-pointer bg-gradient-to-br from-cyan-400 to-teal-500 hover:from-cyan-300 hover:to-teal-400 light:bg-slate-800 light:hover:bg-slate-600"
             : "cursor-not-allowed bg-zinc-600 light:bg-slate-400"
         }`}
         data-tooltip-id="send-prompt"
@@ -509,7 +509,7 @@ function SendPromptButton({ formRef, promptInput, isDisabled }) {
         aria-label={t("chat_window.send")}
       >
         <ArrowUp
-          className="w-[18px] h-[18px] pointer-events-none text-slate-950 light:text-white"
+          className="w-[18px] h-[18px] pointer-events-none text-slate-900 light:text-white"
           weight="bold"
         />
         <span className="sr-only">{t("chat_window.send")}</span>
