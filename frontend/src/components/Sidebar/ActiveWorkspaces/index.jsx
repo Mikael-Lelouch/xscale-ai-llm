@@ -123,8 +123,8 @@ export default function ActiveWorkspaces() {
                           className={`
                             transition-all duration-[200ms]
                             flex flex-grow w-[75%] gap-x-2 py-[6px] pl-[4px] pr-[6px] rounded-[4px] text-white justify-start items-center
-                            bg-theme-sidebar-item-default
-                            ${isActive ? "light:bg-blue-200 font-bold" : "hover:bg-theme-sidebar-subitem-hover light:hover:bg-slate-300"}
+                            border border-transparent bg-theme-sidebar-item-default
+                            ${isActive ? "border-l-2 border-l-cyan-400 border-y-cyan-400/10 border-r-cyan-400/10 bg-cyan-400/[0.09] shadow-[0_0_24px_rgba(6,182,212,0.09)] light:bg-blue-200 font-bold" : "hover:border-cyan-400/10 hover:bg-theme-sidebar-subitem-hover light:hover:bg-slate-300"}
                           `}
                         >
                           <div className="flex flex-row justify-between w-full items-center">

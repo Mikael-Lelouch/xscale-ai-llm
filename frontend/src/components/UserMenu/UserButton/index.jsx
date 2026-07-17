@@ -67,7 +67,7 @@ export default function UserButton() {
         ref={buttonRef}
         onClick={() => setShowMenu(!showMenu)}
         type="button"
-        className="uppercase transition-all duration-300 w-[35px] h-[35px] text-base font-semibold rounded-full flex items-center bg-theme-action-menu-bg hover:bg-theme-action-menu-item-hover justify-center text-white p-2 hover:border-slate-100 hover:border-opacity-50 border-transparent border"
+        className="uppercase transition-all duration-300 w-9 h-9 text-base font-semibold rounded-xl flex items-center bg-theme-action-menu-bg hover:bg-theme-action-menu-item-hover justify-center text-cyan-200 p-2 hover:border-cyan-300/40 border border-white/10 backdrop-blur-xl hover:shadow-[0_0_20px_rgba(6,182,212,0.14)]"
       >
         {mode === "multi" ? <UserDisplay /> : <Person size={14} />}
       </button>
@@ -75,20 +75,20 @@ export default function UserButton() {
       {showMenu && (
         <div
           ref={menuRef}
-          className="w-fit rounded-lg absolute top-12 right-0 bg-theme-action-menu-bg p-2 flex items-center-justify-center"
+          className="xscale-glass animate-fadeIn min-w-[180px] rounded-xl absolute top-12 right-0 p-2 flex items-center-justify-center"
         >
           <div className="flex flex-col gap-y-2">
             {mode === "multi" && !!user && (
               <button
                 onClick={handleOpenAccountModal}
-                className="border-none text-white hover:bg-theme-action-menu-item-hover w-full text-left px-4 py-1.5 rounded-md"
+                className="border-none text-slate-200 hover:text-cyan-100 hover:bg-theme-action-menu-item-hover w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
               >
                 {t("profile_settings.account")}
               </button>
             )}
             <a
               href={supportEmail}
-              className="text-white hover:bg-theme-action-menu-item-hover w-full text-left px-4 py-1.5 rounded-md"
+              className="text-slate-200 hover:text-cyan-100 hover:bg-theme-action-menu-item-hover w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
             >
               {t("profile_settings.support")}
             </a>
@@ -102,7 +102,7 @@ export default function UserButton() {
                 window.location.replace(paths.home());
               }}
               type="button"
-              className="text-white hover:bg-theme-action-menu-item-hover w-full text-left px-4 py-1.5 rounded-md"
+              className="text-slate-200 hover:text-amber-200 hover:bg-amber-400/[0.07] w-full text-left px-3 py-2 rounded-lg text-sm transition-colors"
             >
               {t("profile_settings.signout")}
             </button>

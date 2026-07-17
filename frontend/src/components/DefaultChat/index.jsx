@@ -9,6 +9,7 @@ import { NavLink } from "react-router-dom";
 import { LAST_VISITED_WORKSPACE } from "@/utils/constants";
 import { useTranslation } from "react-i18next";
 import { safeJsonParse } from "@/utils/request";
+import { ArrowRight, ShieldCheck } from "@phosphor-icons/react";
 
 export default function DefaultChatContainer() {
   const { t } = useTranslation();
@@ -55,7 +56,7 @@ export default function DefaultChatContainer() {
   if (loading) {
     return (
       <Layout>
-        <div className="w-full h-full flex flex-col items-center justify-center overflow-y-auto no-scroll">
+        <div className="xscale-grid w-full h-full flex flex-col items-center justify-center overflow-y-auto no-scroll">
           {/* Logo skeleton */}
           <div className="w-[140px] h-[140px] mb-5 rounded-lg bg-theme-bg-primary animate-pulse" />
           {/* Title skeleton */}
@@ -73,31 +74,39 @@ export default function DefaultChatContainer() {
   const hasWorkspaces = workspaces.length > 0;
   return (
     <Layout>
-      <div className="w-full h-full flex flex-col items-center justify-center overflow-y-auto no-scroll">
-        <img
-          src={logo}
-          alt="Custom Logo"
-          className=" w-[200px] h-fit mb-5 rounded-lg"
-        />
-        <h1 className="text-white text-2xl font-semibold">
-          {t("home.welcome")}, {user.username}!
-        </h1>
-        <p className="text-theme-home-text-secondary text-base text-center whitespace-pre-line">
-          {hasWorkspaces ? t("home.chooseWorkspace") : t("home.notAssigned")}
-        </p>
-        {hasWorkspaces && (
-          <NavLink
-            to={paths.workspace.chat(
-              lastVisitedWorkspace?.slug || workspaces[0].slug
-            )}
-            className="text-sm font-medium mt-[10px] w-fit px-4 h-[34px] flex items-center justify-center rounded-lg cursor-pointer bg-theme-home-button-secondary hover:bg-theme-home-button-secondary-hover text-theme-home-button-secondary-text hover:text-theme-home-button-secondary-hover-text transition-all duration-200"
-          >
-            {t("home.goToWorkspace", {
-              workspace: lastVisitedWorkspace?.name || workspaces[0].name,
-            })}{" "}
-            &rarr;
-          </NavLink>
-        )}
+      <div className="xscale-grid w-full h-full flex flex-col items-center justify-center overflow-y-auto no-scroll px-6 py-20">
+        <div className="animate-slideUp flex w-full max-w-2xl flex-col items-center text-center">
+          <div className="xscale-glass mb-8 flex h-20 min-w-20 items-center justify-center rounded-2xl px-5">
+            <img
+              src={logo}
+              alt="Custom Logo"
+              className="max-h-12 w-auto rounded object-contain"
+            />
+          </div>
+          <div className="mb-4 flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-300">
+            <ShieldCheck size={14} weight="duotone" />
+            XSCALE AI
+          </div>
+          <h1 className="xscale-gradient-text text-3xl font-semibold tracking-[-0.03em] md:text-4xl">
+            {t("home.welcome")}, {user.username}!
+          </h1>
+          <p className="mt-3 max-w-lg text-theme-home-text-secondary text-sm md:text-base text-center whitespace-pre-line leading-7">
+            {hasWorkspaces ? t("home.chooseWorkspace") : t("home.notAssigned")}
+          </p>
+          {hasWorkspaces && (
+            <NavLink
+              to={paths.workspace.chat(
+                lastVisitedWorkspace?.slug || workspaces[0].slug
+              )}
+              className="xscale-gradient-button mt-7 flex h-11 w-fit cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-slate-950 transition-all duration-200 hover:-translate-y-0.5"
+            >
+              {t("home.goToWorkspace", {
+                workspace: lastVisitedWorkspace?.name || workspaces[0].name,
+              })}
+              <ArrowRight size={17} weight="bold" />
+            </NavLink>
+          )}
+        </div>
       </div>
     </Layout>
   );
@@ -108,7 +117,7 @@ const Layout = ({ children }) => {
   return (
     <div
       style={{ height: isMobile ? "100%" : "calc(100% - 32px)" }}
-      className={`relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[16px] bg-theme-bg-secondary light:border-[1px] light:border-theme-sidebar-border w-full h-full overflow-y-scroll ${showScrollbar ? "show-scrollbar" : "no-scroll"}`}
+      className={`relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[20px] bg-theme-bg-secondary border border-white/[0.06] light:border-theme-sidebar-border w-full h-full overflow-y-scroll shadow-[0_20px_70px_rgba(0,0,0,0.25)] ${showScrollbar ? "show-scrollbar" : "no-scroll"}`}
     >
       {children}
     </div>

@@ -15,7 +15,7 @@ export default function SettingsButton() {
       <div className="flex w-fit">
         <Link
           to={paths.home()}
-          className="transition-all duration-300 p-2 rounded-full bg-theme-sidebar-footer-icon hover:bg-theme-sidebar-footer-icon-hover"
+          className="transition-all duration-300 p-2 rounded-xl border border-white/[0.06] bg-theme-sidebar-footer-icon hover:border-cyan-400/30 hover:bg-theme-sidebar-footer-icon-hover hover:shadow-[0_0_18px_rgba(6,182,212,0.12)]"
           aria-label="Home"
           data-tooltip-id="footer-item"
           data-tooltip-content="Back to workspaces"
@@ -32,7 +32,7 @@ export default function SettingsButton() {
     <div className="flex w-fit">
       <Link
         to={paths.settings.interface()}
-        className="transition-all duration-300 p-2 rounded-full bg-theme-sidebar-footer-icon hover:bg-theme-sidebar-footer-icon-hover"
+        className="transition-all duration-300 p-2 rounded-xl border border-white/[0.06] bg-theme-sidebar-footer-icon hover:border-cyan-400/30 hover:bg-theme-sidebar-footer-icon-hover hover:shadow-[0_0_18px_rgba(6,182,212,0.12)]"
         aria-label="Settings"
         data-tooltip-id="footer-item"
         data-tooltip-content="Open settings"

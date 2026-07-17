@@ -102,10 +102,10 @@ const HistoricalMessage = ({
       <div
         key={uuid}
         onAnimationEnd={onEndAnimation}
-        className={`${isDeleted ? "animate-remove" : ""} flex justify-end w-full group`}
+        className={`${isDeleted ? "animate-remove" : ""} animate-fadeIn flex justify-end w-full group`}
       >
-        <div className="py-4 px-4 flex flex-col items-end">
-          <div className="bg-zinc-800 light:bg-slate-100 rounded-[20px] rounded-br-none px-4 py-3.5 max-w-[600px] [&_p]:m-0">
+        <div className="py-3 px-3 md:px-4 flex flex-col items-end">
+          <div className="border border-cyan-400/10 bg-gradient-to-br from-[#172536] to-[#111827] shadow-[0_10px_30px_rgba(0,0,0,0.16)] light:bg-slate-100 rounded-[20px] rounded-br-md px-4 py-3.5 max-w-[620px] [&_p]:m-0">
             <TruncatableContent>
               <RenderChatContent
                 role={role}
@@ -136,9 +136,9 @@ const HistoricalMessage = ({
     <div
       key={uuid}
       onAnimationEnd={onEndAnimation}
-      className={`${isDeleted ? "animate-remove" : ""} flex justify-start w-full group`}
+      className={`${isDeleted ? "animate-remove" : ""} animate-fadeIn flex justify-start w-full group`}
     >
-      <div className="py-4 px-4 md:pl-0 flex flex-col w-full">
+      <div className="py-3 px-4 md:pl-1 flex flex-col w-full">
         {isEditing ? (
           <EditMessageForm
             role={role}

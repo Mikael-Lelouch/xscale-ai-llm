@@ -2,54 +2,155 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    background: var(--xscale-night);
+    color: var(--theme-text-primary);
+  }
+
+  ::selection {
+    background: rgba(6, 182, 212, 0.28);
+    color: #f8fafc;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgba(34, 211, 238, 0.72);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .xscale-shell {
+    background:
+      radial-gradient(circle at 75% 8%, rgba(6, 182, 212, 0.09), transparent 28rem),
+      radial-gradient(circle at 12% 92%, rgba(20, 184, 166, 0.07), transparent 24rem),
+      var(--xscale-night);
+  }
+
+  .xscale-grid {
+    background-color: var(--theme-bg-chat);
+    background-image:
+      linear-gradient(rgba(34, 211, 238, 0.026) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(34, 211, 238, 0.026) 1px, transparent 1px),
+      radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.07), transparent 42%);
+    background-size: 32px 32px, 32px 32px, 100% 100%;
+  }
+
+  .xscale-glass {
+    border: 1px solid var(--xscale-border);
+    background: linear-gradient(145deg, rgba(15, 20, 34, 0.88), rgba(10, 14, 26, 0.76));
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.025);
+    backdrop-filter: blur(18px);
+  }
+
+  .xscale-card {
+    border: 1px solid var(--xscale-border);
+    background: linear-gradient(145deg, rgba(15, 20, 34, 0.82), rgba(13, 19, 32, 0.66));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+    backdrop-filter: blur(14px);
+  }
+
+  .xscale-card:hover {
+    border-color: var(--xscale-border-active);
+    background: linear-gradient(145deg, rgba(8, 145, 178, 0.13), rgba(15, 20, 34, 0.84));
+    box-shadow: 0 12px 36px var(--xscale-glow), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .xscale-gradient-text {
+    background: linear-gradient(100deg, #f1f5f9 10%, #22d3ee 42%, #14b8a6 62%, #f1f5f9 90%);
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: xscale-gradient-shift 7s ease-in-out infinite;
+  }
+
+  .xscale-gradient-button {
+    background: linear-gradient(135deg, var(--xscale-cyan), var(--xscale-teal));
+    box-shadow: 0 8px 28px rgba(6, 182, 212, 0.2);
+  }
+
+  .xscale-gradient-button:hover {
+    box-shadow: 0 10px 34px rgba(6, 182, 212, 0.34);
+    filter: brightness(1.08);
+  }
+
+  .xscale-composer {
+    border: 1px solid var(--theme-chat-input-border);
+    background: linear-gradient(145deg, rgba(18, 27, 43, 0.94), rgba(10, 14, 26, 0.92));
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    backdrop-filter: blur(20px);
+    transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  }
+
+  .xscale-composer:focus-within {
+    border-color: rgba(34, 211, 238, 0.55);
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.34), 0 0 0 3px rgba(6, 182, 212, 0.1), 0 0 30px rgba(6, 182, 212, 0.12);
+  }
+}
+
+@keyframes xscale-gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes xscale-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(6, 182, 212, 0); }
+  50% { box-shadow: 0 0 28px rgba(6, 182, 212, 0.22); }
+}
+
 * {
   -webkit-font-smoothing: antialiased;
 }
 
 :root {
-  /* XSCALE AI — default (dark) theme. Cyan/teal accents on a deep night-blue base. */
   --xscale-cyan: #06b6d4;
   --xscale-cyan-bright: #22d3ee;
   --xscale-cyan-deep: #0891b2;
   --xscale-teal: #14b8a6;
   --xscale-amber: #ffb867;
   --xscale-night: #0a0e1a;
+  --xscale-night-raised: #0f1422;
+  --xscale-night-soft: #0d1320;
+  --xscale-border: rgba(148, 163, 184, 0.14);
+  --xscale-border-active: rgba(34, 211, 238, 0.42);
+  --xscale-glow: rgba(6, 182, 212, 0.18);
 
   --theme-loader: #22d3ee;
   --theme-bg-primary: #0a0e1a;
   --theme-bg-secondary: #0f1422;
-  --theme-bg-sidebar: #0a0e1a;
+  --theme-bg-sidebar: rgba(10, 14, 26, 0.88);
   --theme-bg-container: #0a0e1a;
   --theme-bg-chat: #0d1320;
-  --theme-bg-chat-input: #161b23;
+  --theme-bg-chat-input: rgba(15, 20, 34, 0.88);
   --theme-text-primary: #f1f5f9;
   --theme-text-secondary: #94a3b8;
   --theme-placeholder: #475569;
-  --theme-sidebar-item-default: rgba(255, 255, 255, 0.1);
-  --theme-sidebar-item-selected: rgba(255, 255, 255, 0.3);
-  --theme-sidebar-item-hover: #3f3f42;
-  --theme-sidebar-subitem-default: rgba(255, 255, 255, 0.05);
-  --theme-sidebar-subitem-selected: rgba(255, 255, 255, 0.05);
-  --theme-sidebar-thread-selected: rgba(255, 255, 255, 0.05);
-  --theme-popup-menu-bg: #0a0e1a;
+  --theme-sidebar-item-default: rgba(15, 23, 42, 0.5);
+  --theme-sidebar-item-selected: rgba(6, 182, 212, 0.13);
+  --theme-sidebar-item-hover: rgba(34, 211, 238, 0.08);
+  --theme-sidebar-subitem-default: rgba(15, 23, 42, 0.24);
+  --theme-sidebar-subitem-selected: rgba(6, 182, 212, 0.12);
+  --theme-sidebar-thread-selected: rgba(6, 182, 212, 0.1);
+  --theme-popup-menu-bg: rgba(10, 14, 26, 0.96);
 
   --theme-sidebar-subitem-hover: rgba(34, 211, 238, 0.08);
-  --theme-sidebar-border: rgba(148, 163, 184, 0.14);
+  --theme-sidebar-border: var(--xscale-border);
   --theme-sidebar-item-workspace-active: #ffffff;
   --theme-sidebar-item-workspace-inactive: #ffffff;
 
-  --theme-sidebar-footer-icon: rgba(255, 255, 255, 0.1);
-  --theme-sidebar-footer-icon-fill: #ffffff;
-  --theme-sidebar-footer-icon-hover: rgba(255, 255, 255, 0.2);
+  --theme-sidebar-footer-icon: rgba(15, 23, 42, 0.72);
+  --theme-sidebar-footer-icon-fill: #cbd5e1;
+  --theme-sidebar-footer-icon-hover: rgba(6, 182, 212, 0.16);
 
-  --theme-chat-input-border: #243042;
-  --theme-action-menu-bg: #161b23;
+  --theme-chat-input-border: rgba(148, 163, 184, 0.2);
+  --theme-action-menu-bg: rgba(15, 20, 34, 0.94);
   --theme-action-menu-item-hover: rgba(34, 211, 238, 0.1);
   --theme-settings-input-bg: #0d1320;
   --theme-settings-input-placeholder: rgba(255, 255, 255, 0.5);
   --theme-settings-input-active: rgb(255 255 255 / 0.2);
   --theme-settings-input-text: #f1f5f9;
-  --theme-modal-border: #243042;
+  --theme-modal-border: rgba(148, 163, 184, 0.16);
 
   --theme-button-primary: #06b6d4;
   --theme-button-primary-hover: #0891b2;

@@ -217,12 +217,12 @@ export default forwardRef(function (
     <MessageActionsProvider>
       <ThoughtExpansionProvider>
         <div
-          className={`markdown text-white/80 light:text-theme-text-primary font-light ${textSizeClass} h-full md:h-[83%] pb-[100px] pt-6 md:pt-0 md:pb-20 md:mx-0 overflow-y-scroll flex flex-col items-center justify-start ${showScrollbar ? "show-scrollbar" : "no-scroll"}`}
+          className={`markdown text-slate-200/90 light:text-theme-text-primary font-light ${textSizeClass} h-full md:h-[83%] pb-[110px] pt-14 md:pt-12 md:pb-24 md:mx-0 overflow-y-scroll flex flex-col items-center justify-start ${showScrollbar ? "show-scrollbar" : "no-scroll"}`}
           id="chat-history"
           ref={chatHistoryRef}
           onScroll={debouncedScroll}
         >
-          <div className="w-full max-w-[750px]">
+          <div className="w-full max-w-[790px] px-2 md:px-0">
             {compiledHistory.map((item, index) =>
               Array.isArray(item) ? renderStatusResponse(item, index) : item
             )}
@@ -235,10 +235,10 @@ export default forwardRef(function (
           )}
         </div>
         {!isAtBottom && (
-          <div className="absolute bottom-40 right-10 z-50 cursor-pointer animate-pulse">
+          <div className="absolute bottom-40 right-5 md:right-10 z-50 cursor-pointer animate-pulse">
             <div className="flex flex-col items-center">
               <div
-                className="p-1 rounded-full border border-white/10 bg-white/10 hover:bg-white/20 hover:text-white"
+                className="xscale-glass p-1.5 rounded-full hover:border-cyan-400/30 hover:text-white"
                 onClick={() => {
                   scrollToBottom(isStreaming ? false : true);
                   setIsUserScrolling(false);

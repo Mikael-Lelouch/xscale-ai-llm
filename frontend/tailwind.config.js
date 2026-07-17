@@ -20,6 +20,11 @@ export default {
         "270": "270deg",
         "360": "360deg"
       },
+      animation: {
+        "glow-pulse": "glowPulse 3s ease-in-out infinite",
+        "gradient-shift": "gradientShift 7s ease-in-out infinite",
+        "slide-up-xscale": "slideUp 450ms ease-out",
+      },
       colors: {
         "black-900": "#141414",
         accent: "#3D4147",
@@ -269,7 +274,19 @@ export default {
         'bounce-subtle': {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-2px)' }
-        }
+        },
+        glowPulse: {
+          "0%, 100%": { boxShadow: "0 0 0 rgba(6, 182, 212, 0)" },
+          "50%": { boxShadow: "0 0 28px rgba(6, 182, 212, 0.22)" },
+        },
+        gradientShift: {
+          "0%, 100%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "100% 50%" },
+        },
+        slideUp: {
+          "0%": { opacity: "0", transform: "translateY(12px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       }
     }
   },
