@@ -81,10 +81,10 @@ export default function DefaultChatContainer() {
             />
           </div>
 
-          {/* SOC badge */}
-          <div className="mb-4 flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/[0.06] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-300">
+          {/* Sovereignty badge */}
+          <div className="mb-4 flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-400/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-emerald-300">
             <ShieldCheck size={14} weight="duotone" />
-            XSCALE AI
+            XSCALE AI — SOUVEREIGN
           </div>
 
           {/* Gradient heading */}

@@ -20,11 +20,6 @@ export default {
         "270": "270deg",
         "360": "360deg"
       },
-      animation: {
-        "glow-pulse": "glowPulse 3s ease-in-out infinite",
-        "gradient-shift": "gradientShift 7s ease-in-out infinite",
-        "slide-up-xscale": "slideUp 450ms ease-out",
-      },
       colors: {
         "black-900": "#141414",
         accent: "#3D4147",
@@ -228,7 +223,10 @@ export default {
         "pulse-glow": "pulse-glow 1.5s infinite",
         'fade-in': 'fade-in 0.3s ease-out',
         'slide-up': 'slide-up 0.4s ease-out forwards',
-        'bounce-subtle': 'bounce-subtle 2s ease-in-out infinite'
+        'bounce-subtle': 'bounce-subtle 2s ease-in-out infinite',
+        "glow-pulse": "glowPulse 3s ease-in-out infinite",
+        "gradient-shift": "gradientShift 7s ease-in-out infinite",
+        "slide-up-xscale": "slideUp 450ms ease-out",
       },
       keyframes: {
         sweep: {

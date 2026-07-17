@@ -105,7 +105,7 @@ const HistoricalMessage = ({
         className={`${isDeleted ? "animate-remove" : ""} flex justify-end w-full group`}
       >
         <div className="py-4 px-4 flex flex-col items-end">
-          <div className="bg-gradient-to-br from-cyan-500/15 to-teal-500/10 light:bg-slate-100 border border-cyan-400/15 rounded-[20px] rounded-br-none px-4 py-3.5 max-w-[600px] [&_p]:m-0">
+          <div className="xscale-bubble-user light:bg-slate-100 rounded-[20px] rounded-br-none px-4 py-3.5 max-w-[600px] [&_p]:m-0">
             <TruncatableContent>
               <RenderChatContent
                 role={role}

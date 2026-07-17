@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 /* ============================================================
-   XSCALE AI — Design System
-   Premium SOC aesthetic: dark, glassmorphic, cyan/teal accents
+   XSCALE AI — Design System v3
+   Sovereign SOC aesthetic: navy, glass, cyan/teal gradients
+   Aligned with XSCALE TECHNOLOGIES brand identity
    ============================================================ */
 
 @layer base {
@@ -23,6 +24,7 @@
 }
 
 @layer components {
+  /* Shell — page background with radial gradients */
   .xscale-shell {
     background:
       radial-gradient(circle at 75% 8%, rgba(6, 182, 212, 0.06), transparent 28rem),
@@ -30,6 +32,7 @@
       var(--xscale-night);
   }
 
+  /* Grid pattern — subtle cyan dot grid for chat areas */
   .xscale-grid-bg {
     background-color: var(--theme-bg-chat);
     background-image:
@@ -38,6 +41,7 @@
     background-size: 32px 32px;
   }
 
+  /* Glass — frosted glass surface */
   .xscale-glass {
     border: 1px solid rgba(148, 163, 184, 0.12);
     background: linear-gradient(145deg, rgba(15, 20, 34, 0.85), rgba(10, 14, 26, 0.72));
@@ -50,6 +54,7 @@
     box-shadow: 0 8px 28px rgba(6, 182, 212, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
+  /* Card — interactive glass card with hover lift */
   .xscale-card {
     border: 1px solid rgba(148, 163, 184, 0.1);
     background: linear-gradient(145deg, rgba(15, 20, 34, 0.78), rgba(13, 19, 32, 0.62));
@@ -65,6 +70,7 @@
     transform: translateY(-2px);
   }
 
+  /* Gradient text — animated brand gradient on headings */
   .xscale-gradient-text {
     background: linear-gradient(100deg, #f1f5f9 10%, #22d3ee 45%, #14b8a6 65%, #f1f5f9 90%);
     background-size: 220% auto;
@@ -74,6 +80,7 @@
     animation: xscale-gradient-shift 7s ease-in-out infinite;
   }
 
+  /* Gradient button — primary CTA */
   .xscale-gradient-button {
     background: linear-gradient(135deg, #06b6d4, #14b8a6);
     box-shadow: 0 6px 22px rgba(6, 182, 212, 0.18);
@@ -86,6 +93,7 @@
     transform: translateY(-1px);
   }
 
+  /* Composer — floating chat input bar */
   .xscale-composer {
     border: 1px solid var(--theme-chat-input-border);
     background: linear-gradient(145deg, rgba(15, 20, 34, 0.92), rgba(10, 14, 26, 0.9));
@@ -99,16 +107,7 @@
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(6, 182, 212, 0.08), 0 0 24px rgba(6, 182, 212, 0.1);
   }
 
-  .xscale-sidebar-item {
-    transition: background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
-  }
-
-  .xscale-sidebar-item-active {
-    border-left: 3px solid var(--xscale-cyan-bright);
-    box-shadow: inset 0 0 18px rgba(6, 182, 212, 0.06);
-    background: rgba(6, 182, 212, 0.06);
-  }
-
+  /* Pill — small badge/tag */
   .xscale-pill {
     border: 1px solid rgba(34, 211, 238, 0.18);
     background: rgba(6, 182, 212, 0.06);
@@ -120,8 +119,41 @@
     border-color: rgba(34, 211, 238, 0.4);
     background: rgba(6, 182, 212, 0.1);
   }
+
+  /* Sidebar item states */
+  .xscale-sidebar-item {
+    transition: background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+  }
+
+  .xscale-sidebar-item-active {
+    border-left: 3px solid #22d3ee;
+    box-shadow: inset 0 0 18px rgba(6, 182, 212, 0.06);
+    background: rgba(6, 182, 212, 0.06);
+  }
+
+  /* Sovereignty badge */
+  .xscale-badge-sovereign {
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    background: rgba(16, 185, 129, 0.08);
+    color: #34d399;
+    letter-spacing: 0.15em;
+  }
+
+  /* User message bubble */
+  .xscale-bubble-user {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(20, 184, 166, 0.08));
+    border: 1px solid rgba(6, 182, 212, 0.15);
+  }
+
+  /* AI message bubble */
+  .xscale-bubble-ai {
+    background: rgba(15, 20, 34, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.08);
+    backdrop-filter: blur(8px);
+  }
 }
 
+/* Keyframes */
 @keyframes xscale-gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -142,12 +174,21 @@
   100% { opacity: 1; }
 }
 
+@keyframes xscale-scale-in {
+  0% { opacity: 0; transform: scale(0.96); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
 .animate-xscale-slide-up {
   animation: xscale-slide-up 450ms ease-out forwards;
 }
 
 .animate-xscale-fade-in {
   animation: xscale-fade-in 300ms ease-out forwards;
+}
+
+.animate-xscale-scale-in {
+  animation: xscale-scale-in 250ms ease-out forwards;
 }
 
 * {
@@ -167,6 +208,8 @@
   --xscale-border: rgba(148, 163, 184, 0.14);
   --xscale-border-active: rgba(34, 211, 238, 0.42);
   --xscale-glow: rgba(6, 182, 212, 0.18);
+  --xscale-violet: #8b5cf6;
+  --xscale-emerald: #10b981;
 
   --theme-loader: #22d3ee;
   --theme-bg-primary: #0a0e1a;
