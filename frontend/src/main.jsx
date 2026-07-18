@@ -32,6 +32,13 @@ const router = createBrowserRouter([
         element: <Login />,
       },
       {
+        path: "/marketplace",
+        lazy: async () => {
+          const { default: Marketplace } = await import("@/pages/Marketplace");
+          return { element: <PrivateRoute Component={Marketplace} /> };
+        },
+      },
+      {
         path: "/sso/simple",
         element: <SimpleSSOPassthrough />,
       },

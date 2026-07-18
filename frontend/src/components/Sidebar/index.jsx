@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { List, Plus } from "@phosphor-icons/react";
+import { List, Plus, Storefront } from "@phosphor-icons/react";
 import NewWorkspaceModal, {
   useNewWorkspaceModal,
 } from "../Modals/NewWorkspace";
@@ -73,6 +73,20 @@ export default function Sidebar() {
                 <div className="relative h-[calc(100%-60px)] flex flex-col w-full justify-between pt-[10px] overflow-y-scroll no-scroll">
                   <div className="flex flex-col gap-y-[14px]">
                     <SearchBox user={user} showNewWsModal={showNewWsModal} />
+                    {/* Marketplace link */}
+                    <Link
+                      to={paths.marketplace()}
+                      className="xscale-sidebar-item flex items-center gap-2 rounded-xl px-3 py-2.5 border border-transparent hover:border-cyan-400/20 hover:bg-cyan-400/[0.06] transition-all duration-200 group"
+                    >
+                      <Storefront
+                        size={18}
+                        className="text-cyan-400 group-hover:text-cyan-300 transition-colors"
+                        weight="duotone"
+                      />
+                      <span className="text-sm font-medium text-theme-text-secondary group-hover:text-white transition-colors">
+                        Marketplace
+                      </span>
+                    </Link>
                     <ActiveWorkspaces />
                   </div>
                 </div>
