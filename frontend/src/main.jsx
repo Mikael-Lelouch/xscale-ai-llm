@@ -32,13 +32,6 @@ const router = createBrowserRouter([
         element: <Login />,
       },
       {
-        path: "/marketplace",
-        lazy: async () => {
-          const { default: Marketplace } = await import("@/pages/Marketplace");
-          return { element: <PrivateRoute Component={Marketplace} /> };
-        },
-      },
-      {
         path: "/sso/simple",
         element: <SimpleSSOPassthrough />,
       },
@@ -184,6 +177,15 @@ const router = createBrowserRouter([
               <AdminRoute Component={AgentBuilder} hideUserMenu={true} />
             ),
           };
+        },
+      },
+      {
+        path: "/settings/marketplace",
+        lazy: async () => {
+          const { default: MarketplaceSettings } = await import(
+            "@/pages/GeneralSettings/Marketplace"
+          );
+          return { element: <AdminRoute Component={MarketplaceSettings} /> };
         },
       },
       {

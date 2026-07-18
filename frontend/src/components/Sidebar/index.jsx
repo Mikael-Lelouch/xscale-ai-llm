@@ -75,7 +75,7 @@ export default function Sidebar() {
                     <SearchBox user={user} showNewWsModal={showNewWsModal} />
                     {/* Marketplace link */}
                     <Link
-                      to={paths.marketplace()}
+                      to={paths.settings.marketplace()}
                       className="xscale-sidebar-item flex items-center gap-2 rounded-xl px-3 py-2.5 border border-transparent hover:border-cyan-400/20 hover:bg-cyan-400/[0.06] transition-all duration-200 group"
                     >
                       <Storefront

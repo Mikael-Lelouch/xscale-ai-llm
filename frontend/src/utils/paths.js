@@ -156,6 +156,9 @@ export default {
     agentSkills: () => {
       return "/settings/agents";
     },
+    marketplace: () => {
+      return "/settings/marketplace";
+    },
     chat: () => {
       return "/settings/chat";
     },
