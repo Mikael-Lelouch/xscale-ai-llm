@@ -25,7 +25,37 @@ import {
   Plus,
 } from "@phosphor-icons/react";
 
-// --- Agent catalog with flow configs ---
+// Helper: generate a valid flow config for AnythingLLM Agent Builder
+// Format: { name, description, steps: [{type, config}] }
+// Valid block types: start, llmInstruction, apiCall, webScraping, finish
+function makeFlowConfig(name, description, instruction) {
+  return {
+    name,
+    description,
+    steps: [
+      {
+        type: "start",
+        config: {
+          variables: [{ name: "input", value: "" }],
+        },
+      },
+      {
+        type: "llmInstruction",
+        config: {
+          instruction: instruction,
+          resultVariable: "result",
+          directOutput: false,
+        },
+      },
+      {
+        type: "finish",
+        config: {},
+      },
+    ],
+  };
+}
+
+// --- Agent catalog with valid flow configs ---
 const AGENT_CATALOG = [
   {
     id: "soc-analyst",
@@ -38,14 +68,8 @@ const AGENT_CATALOG = [
       "Agent d'analyse SOC qui corrèle les alertes Wazuh, enrichit avec CTI et génère des rapports d'incident structurés.",
     skills: ["Wazuh correlation", "Threat enrichment", "Incident report"],
     tier: "pro",
-    flowConfig: {
-      type: "soc-analyst",
-      description: "SOC Analyst — incident correlation and reporting",
-      steps: [
-        { type: "llm", prompt: "Analyze security alerts and correlate indicators of compromise" },
-        { type: "output", format: "incident-report" },
-      ],
-    },
+    instruction:
+      "You are a SOC Analyst agent. Analyze the provided security alerts, correlate indicators of compromise, enrich with threat intelligence context, and generate a structured incident report with severity, affected assets, IOCs, and recommended actions.",
   },
   {
     id: "pentest-assistant",
@@ -58,14 +82,8 @@ const AGENT_CATALOG = [
       "Guide les phases de pentest (recon, enum, exploit, report). Compatible OWASP Top 10 & PTES.",
     skills: ["OWASP", "Nmap analysis", "Report gen"],
     tier: "pro",
-    flowConfig: {
-      type: "pentest-assistant",
-      description: "Pentest Assistant — OWASP/PTES methodology guide",
-      steps: [
-        { type: "llm", prompt: "Guide pentest phases: recon, enumeration, exploitation, reporting" },
-        { type: "output", format: "pentest-report" },
-      ],
-    },
+    instruction:
+      "You are a Pentest Assistant following OWASP Top 10 and PTES methodology. Guide the user through pentest phases: reconnaissance, enumeration, exploitation, and reporting. Provide specific commands, explain findings, and generate a structured pentest report.",
   },
   {
     id: "devops-pilot",
@@ -78,14 +96,8 @@ const AGENT_CATALOG = [
       "Génère pipelines CI/CD, Dockerfiles optimisés, et playbooks Ansible. Analyse les logs de déploiement.",
     skills: ["Docker", "CI/CD", "Ansible"],
     tier: "free",
-    flowConfig: {
-      type: "devops-pilot",
-      description: "DevOps Pilot — CI/CD and infrastructure automation",
-      steps: [
-        { type: "llm", prompt: "Generate CI/CD pipelines, Dockerfiles, and Ansible playbooks" },
-        { type: "output", format: "code" },
-      ],
-    },
+    instruction:
+      "You are a DevOps Pilot agent. Generate optimized CI/CD pipelines, Dockerfiles, and Ansible playbooks based on the user's requirements. Analyze deployment logs and suggest fixes. Follow best practices for security, caching, and reliability.",
   },
   {
     id: "data-explorer",
@@ -98,14 +110,8 @@ const AGENT_CATALOG = [
       "Interroge vos bases SQL/Postgres, génère des graphiques et exports CSV. Idéal pour reporting rapide.",
     skills: ["SQL", "Chart gen", "CSV export"],
     tier: "free",
-    flowConfig: {
-      type: "data-explorer",
-      description: "Data Explorer — SQL queries and data visualization",
-      steps: [
-        { type: "llm", prompt: "Query SQL databases and generate visualizations" },
-        { type: "output", format: "chart" },
-      ],
-    },
+    instruction:
+      "You are a Data Explorer agent. Write and optimize SQL queries for the user's database, explain query plans, generate data visualization suggestions, and export results as CSV. Support PostgreSQL, MySQL, and SQLite dialects.",
   },
   {
     id: "code-reviewer",
@@ -118,14 +124,8 @@ const AGENT_CATALOG = [
       "Analyse diffs Git, détecte vulnérabilités (SAST), suggère best practices. Intégration PR GitHub.",
     skills: ["Git diff", "SAST scan", "PR comments"],
     tier: "pro",
-    flowConfig: {
-      type: "code-reviewer",
-      description: "Code Reviewer — SAST and PR analysis",
-      steps: [
-        { type: "llm", prompt: "Analyze git diffs, detect vulnerabilities, suggest best practices" },
-        { type: "output", format: "review" },
-      ],
-    },
+    instruction:
+      "You are a Code Reviewer agent. Analyze git diffs for vulnerabilities using SAST principles, detect security issues, suggest best practices, and generate structured PR review comments with severity levels and fix recommendations.",
   },
   {
     id: "doc-generator",
@@ -138,14 +138,8 @@ const AGENT_CATALOG = [
       "Génère documentation API (OpenAPI), READMEs, et guides d'architecture à partir du code source.",
     skills: ["OpenAPI", "Markdown", "Arch diagrams"],
     tier: "free",
-    flowConfig: {
-      type: "doc-generator",
-      description: "Doc Generator — auto documentation from source code",
-      steps: [
-        { type: "llm", prompt: "Generate OpenAPI docs, READMEs, and architecture guides from source" },
-        { type: "output", format: "markdown" },
-      ],
-    },
+    instruction:
+      "You are a Doc Generator agent. Analyze source code and generate comprehensive documentation: OpenAPI specs for APIs, README files, architecture diagrams in mermaid, and developer guides. Follow clear, professional documentation standards.",
   },
   {
     id: "secrets-hunter",
@@ -158,14 +152,8 @@ const AGENT_CATALOG = [
       "Scanne repos, logs et configs pour détecter secrets/API keys/mots de passe exposés. Compatible TruffleHog.",
     skills: ["Repo scan", "Pattern match", "Alert gen"],
     tier: "pro",
-    flowConfig: {
-      type: "secrets-hunter",
-      description: "Secrets Hunter — detect leaked credentials",
-      steps: [
-        { type: "llm", prompt: "Scan repositories and configs for leaked secrets and API keys" },
-        { type: "output", format: "alert" },
-      ],
-    },
+    instruction:
+      "You are a Secrets Hunter agent. Scan provided code, logs, and config files for leaked secrets, API keys, passwords, and tokens. Use pattern matching similar to TruffleHog. Generate alerts with file location, secret type, and remediation steps.",
   },
   {
     id: "db-architect",
@@ -178,14 +166,8 @@ const AGENT_CATALOG = [
       "Génère schémas SQL, propose optimisations d'index, et analyse les plans d'exécution lents.",
     skills: ["Schema design", "Index tuning", "Explain plan"],
     tier: "free",
-    flowConfig: {
-      type: "db-architect",
-      description: "DB Architect — schema design and query optimization",
-      steps: [
-        { type: "llm", prompt: "Generate SQL schemas, propose index optimizations, analyze execution plans" },
-        { type: "output", format: "sql" },
-      ],
-    },
+    instruction:
+      "You are a DB Architect agent. Design SQL schemas from requirements, propose index optimizations, analyze slow EXPLAIN plans, and suggest query rewrites. Support PostgreSQL, MySQL, and SQLite. Include normalization and performance considerations.",
   },
   {
     id: "threat-intel",
@@ -198,14 +180,8 @@ const AGENT_CATALOG = [
       "Collecte IOCs, enrichit avec MITRE ATT&CK, et génère flux d'intelligence pour votre SIEM.",
     skills: ["MITRE ATT&CK", "IOC collection", "SIEM feed"],
     tier: "pro",
-    flowConfig: {
-      type: "threat-intel",
-      description: "Threat Intel Bot — IOC collection and MITRE enrichment",
-      steps: [
-        { type: "llm", prompt: "Collect IOCs, enrich with MITRE ATT&CK, generate SIEM feeds" },
-        { type: "output", format: "intel-feed" },
-      ],
-    },
+    instruction:
+      "You are a Threat Intel Bot agent. Collect and enrich IOCs with MITRE ATT&CK technique mappings, generate structured threat intelligence feeds compatible with SIEM ingestion, and provide context on threat actors and campaigns.",
   },
   {
     id: "ai-researcher",
@@ -218,14 +194,8 @@ const AGENT_CATALOG = [
       "Synthèse de papiers arXiv, benchmarks modèles, et veille AI. Génère résumés techniques structurés.",
     skills: ["ArXiv search", "Paper summary", "Benchmark"],
     tier: "free",
-    flowConfig: {
-      type: "ai-researcher",
-      description: "AI Researcher — paper synthesis and model benchmarks",
-      steps: [
-        { type: "llm", prompt: "Synthesize arXiv papers, benchmark models, generate technical summaries" },
-        { type: "output", format: "research-summary" },
-      ],
-    },
+    instruction:
+      "You are an AI Researcher agent. Synthesize arXiv papers, benchmark LLM models, track AI research trends, and generate structured technical summaries with key findings, methodology, and implications.",
   },
   {
     id: "compliance-auditor",
@@ -238,14 +208,8 @@ const AGENT_CATALOG = [
       "Vérifie conformité NIS2/DORA/HDS, génère matrices de contrôle et plans de remédiation.",
     skills: ["NIS2", "DORA", "HDS", "Remediation"],
     tier: "pro",
-    flowConfig: {
-      type: "compliance-auditor",
-      description: "Compliance Auditor — NIS2/DORA/HDS audit and remediation",
-      steps: [
-        { type: "llm", prompt: "Audit NIS2/DORA/HDS compliance, generate control matrices and remediation plans" },
-        { type: "output", format: "compliance-report" },
-      ],
-    },
+    instruction:
+      "You are a Compliance Auditor agent for NIS2, DORA, and HDS frameworks. Audit the provided systems and processes, generate control matrices, identify gaps, and produce remediation plans with priority levels and timelines.",
   },
   {
     id: "incident-responder",
@@ -258,14 +222,8 @@ const AGENT_CATALOG = [
       "Triage, containment suggestions, et post-mortem auto. Intégration TheHive pour playbook execution.",
     skills: ["Triage", "Containment", "Post-mortem", "TheHive"],
     tier: "pro",
-    flowConfig: {
-      type: "incident-responder",
-      description: "Incident Responder — triage, containment, post-mortem",
-      steps: [
-        { type: "llm", prompt: "Triage incidents, suggest containment, generate post-mortem reports" },
-        { type: "output", format: "incident-report" },
-      ],
-    },
+    instruction:
+      "You are an Incident Responder agent. Triage security incidents by severity, suggest containment actions, generate post-mortem reports, and produce TheHive-compatible playbook steps for automated response.",
   },
 ];
 
@@ -318,9 +276,14 @@ export default function MarketplaceSettings() {
   const handleInstall = async (agent) => {
     setInstalling(agent.id);
     try {
+      const flowConfig = makeFlowConfig(
+        agent.name,
+        agent.description,
+        agent.instruction
+      );
       const result = await AgentFlows.saveFlow(
         agent.name,
-        agent.flowConfig
+        flowConfig
       );
       if (result.success) {
         showToast("Agent installé avec succès", "success");
