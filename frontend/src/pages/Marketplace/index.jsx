@@ -120,7 +120,7 @@ const AGENT_CATALOG = [
   {
     id: "threat-intel",
     category: "soc",
-    icon: Search,
+    icon: MagnifyingGlass,
     accent: "emerald",
     name: "Threat Intel Bot",
     tagline: "Veille & IOC enrichment",
