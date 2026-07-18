@@ -427,6 +427,61 @@
   border-color: var(--theme-sidebar-border);
 }
 
+/* XSCALE light mode overrides — glassmorphism adapts to white theme */
+[data-theme="light"] .xscale-glass,
+[data-theme="light"] .xscale-card {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+}
+
+[data-theme="light"] .xscale-glass:hover,
+[data-theme="light"] .xscale-card:hover {
+  border-color: rgba(6, 182, 212, 0.3);
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.08);
+}
+
+[data-theme="light"] .xscale-composer {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--theme-chat-input-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .xscale-composer:focus-within {
+  border-color: rgba(6, 182, 212, 0.4);
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.08);
+}
+
+[data-theme="light"] .xscale-pill {
+  border-color: rgba(8, 145, 178, 0.2);
+  background: rgba(6, 182, 212, 0.06);
+  color: #0891b2;
+}
+
+[data-theme="light"] .xscale-pill:hover {
+  border-color: rgba(8, 145, 178, 0.4);
+  background: rgba(6, 182, 212, 0.1);
+}
+
+[data-theme="light"] .xscale-grid-bg {
+  background-color: var(--theme-bg-chat);
+  background-image: none;
+}
+
+[data-theme="light"] .xscale-gradient-text {
+  background: linear-gradient(100deg, #0e0f0f 10%, #0891b2 45%, #0d9488 65%, #0e0f0f 90%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+[data-theme="light"] .xscale-sidebar-item-active {
+  border-left-color: #0891b2;
+  background: rgba(6, 182, 212, 0.08);
+}
+
 /*
 This is to override the default border color for the select and input elements
 in the onboarding flow when the theme is not light. This only applies to the

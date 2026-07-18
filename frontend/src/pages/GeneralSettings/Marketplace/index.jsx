@@ -318,20 +318,20 @@ export default function MarketplaceSettings() {
       <Sidebar />
       <div
         style={{ height: isMobile ? "100%" : "calc(100% - 32px)" }}
-        className="relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[20px] bg-theme-bg-secondary border border-white/[0.06] w-full h-full overflow-y-scroll shadow-[0_16px_50px_rgba(0,0,0,0.2)]"
+        className="relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[20px] bg-theme-bg-secondary border border-theme-sidebar-border light:border w-full h-full overflow-y-scroll"
       >
         <div className="flex flex-col w-full px-1 md:pl-6 md:pr-[86px] md:py-6 py-16">
           {/* Header */}
-          <div className="w-full flex flex-col gap-y-1 pb-6 border-white light:border-theme-sidebar-border border-b-2 border-opacity-10">
+          <div className="w-full flex flex-col gap-y-1 pb-6 border-theme-sidebar-border border-b-2">
             <div className="flex items-center gap-3">
               <div className="xscale-glass flex items-center justify-center rounded-xl w-10 h-10">
                 <Storefront size={20} className="text-cyan-400" weight="duotone" />
               </div>
               <div>
-                <p className="text-lg leading-6 font-bold text-white">
+                <p className="text-lg leading-6 font-bold text-theme-text-primary">
                   Marketplace d'Agents
                 </p>
-                <p className="text-xs leading-[18px] font-base text-white text-opacity-60">
+                <p className="text-xs leading-[18px] font-base text-theme-text-secondary">
                   Catalogue d'agents IA prêts à l'emploi pour vos opérations SOC,
                   cybersécurité, DevOps et développement.
                 </p>
@@ -346,7 +346,7 @@ export default function MarketplaceSettings() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher un agent, une compétence..."
-              className="xscale-composer w-full rounded-xl px-4 py-3 pl-11 text-sm text-white placeholder:text-white/40 outline-none"
+              className="xscale-composer w-full rounded-xl px-4 py-3 pl-11 text-sm text-theme-text-primary placeholder:text-theme-placeholder outline-none"
             />
             <MagnifyingGlass
               size={18}
@@ -366,7 +366,7 @@ export default function MarketplaceSettings() {
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                     isActive
                       ? "xscale-pill !border-cyan-400/40 !bg-cyan-400/10"
-                      : "border border-white/[0.06] bg-white/[0.02] text-theme-text-secondary hover:text-white hover:border-white/[0.12]"
+                      : "border border-theme-sidebar-border bg-theme-bg-primary text-theme-text-secondary hover:text-theme-text-primary hover:border-cyan-400/20"
                   }`}
                 >
                   <Icon size={16} weight={isActive ? "fill" : "regular"} />
@@ -459,7 +459,7 @@ function AgentCard({ agent, index, installed, installing, onInstall }) {
       </div>
 
       {/* Name + tagline */}
-      <h3 className="text-white text-lg font-semibold mb-1">
+      <h3 className="text-theme-text-primary text-lg font-semibold mb-1">
         {agent.name}
       </h3>
       <p className={`text-sm ${accent.text} font-medium mb-3`}>
@@ -476,7 +476,7 @@ function AgentCard({ agent, index, installed, installing, onInstall }) {
         {agent.skills.map((skill) => (
           <span
             key={skill}
-            className="rounded-md border border-white/[0.06] bg-white/[0.02] px-2 py-1 text-[11px] font-medium text-theme-text-secondary"
+            className="rounded-md border border-theme-sidebar-border bg-theme-bg-primary px-2 py-1 text-[11px] font-medium text-theme-text-secondary"
           >
             {skill}
           </span>
