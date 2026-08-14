@@ -24,11 +24,11 @@
   </g>
 
   <!-- XSCALE text - brighter white -->
-  <text x="84" y="46" font-family="Orbitron, Arial, sans-serif" font-weight="700" font-size="30" letter-spacing="3" fill="#ffffff" opacity="0.98">XSCALE</text>
+  <text x="84" y="46" font-family="Poppins, Arial, sans-serif" font-weight="700" font-size="30" letter-spacing="3" fill="#ffffff" opacity="0.98">XSCALE</text>
 
   <!-- AI text - vibrant cyan -->
-  <text x="262" y="46" font-family="Orbitron, Arial, sans-serif" font-weight="700" font-size="30" letter-spacing="2" fill="#06b6d4">AI</text>
+  <text x="262" y="46" font-family="Poppins, Arial, sans-serif" font-weight="700" font-size="30" letter-spacing="2" fill="#06b6d4">AI</text>
 
   <!-- TECHNOLOGIES text - clearer gray -->
-  <text x="86" y="66" font-family="Orbitron, Arial, sans-serif" font-weight="500" font-size="11" letter-spacing="6" fill="#cbd5e1">TECHNOLOGIES</text>
+  <text x="86" y="66" font-family="Poppins, Arial, sans-serif" font-weight="500" font-size="11" letter-spacing="6" fill="#cbd5e1">TECHNOLOGIES</text>
 </svg>

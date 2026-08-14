@@ -49,6 +49,9 @@ export default {
 
         // XSCALE AI brand palette
         xscale: {
+          primary: "#0b7bff",
+          "primary-dark": "#0058e0",
+          "primary-light": "#c2dcff",
           cyan: "#06b6d4",
           "cyan-bright": "#22d3ee",
           "cyan-deep": "#0891b2",
@@ -57,6 +60,8 @@ export default {
           night: "#0a0e1a",
           "night-2": "#0f1422",
           "night-3": "#161b23",
+          "navy-900": "#0d111c",
+          "navy-hero": "#0a1040",
         },
 
         // Generic theme colors
@@ -189,7 +194,7 @@ export default {
           "linear-gradient(90deg, rgba(6, 182, 212, 0.22) 0%, rgba(20, 184, 166, 0.16) 100%)",
         "switch-selected": "linear-gradient(146deg, #06b6d4 0%, #14b8a6 100%)",
         "xscale-brand-gradient":
-          "linear-gradient(135deg, #06b6d4 0%, #14b8a6 100%)"
+          "linear-gradient(135deg, #2563eb 0%, #06b6d4 50%, #14b8a6 100%)"
       },
       fontFamily: {
         sans: [
@@ -211,7 +216,7 @@ export default {
           '"Noto Color Emoji"'
         ],
         display: [
-          "Orbitron",
+          "Poppins",
           "Inter",
           "ui-sans-serif",
           "system-ui",
