@@ -138,6 +138,9 @@ export default {
     embeddingPreference: () => {
       return "/settings/embedding-preference";
     },
+    imageGenerationPreference: () => {
+      return "/settings/image-generation-preference";
+    },
     vectorDatabase: () => {
       return "/settings/vector-database";
     },

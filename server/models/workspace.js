@@ -53,7 +53,6 @@ const Workspace = {
     "chatModel",
     "topN",
     "chatMode",
-    // "pfpFilename",
     "agentProvider",
     "agentModel",
     "queryRefusalResponse",
@@ -159,6 +158,12 @@ const Workspace = {
       if (isNaN(id)) return null;
       return id;
     },
+    lastUpdatedAt: (value) => {
+      if (value === null || value === undefined) return new Date();
+      const date = new Date(value);
+      if (isNaN(date.getTime())) return new Date();
+      return date;
+    },
   },
 
   /**
@@ -223,13 +228,15 @@ const Workspace = {
       slug = this.slugify(`${name}-${slugSeed}`, { lower: true });
     }
 
-    // Get the default system prompt
-    const defaultSystemPrompt = await SystemSettings.get({
-      label: "default_system_prompt",
-    });
-    if (!!defaultSystemPrompt?.value)
-      additionalFields.openAiPrompt = defaultSystemPrompt.value;
-    else additionalFields.openAiPrompt = this.defaultPrompt;
+    // If system prompt wasn't sent, apply the system default system prompt
+    if (!additionalFields.openAiPrompt) {
+      const defaultSystemPrompt = await SystemSettings.get({
+        label: "default_system_prompt",
+      });
+      additionalFields.openAiPrompt = !!defaultSystemPrompt?.value
+        ? defaultSystemPrompt.value
+        : this.defaultPrompt;
+    }
 
     try {
       const workspace = await prisma.workspaces.create({
