@@ -54,7 +54,7 @@ export default function Footer() {
               to={paths.github()}
               target="_blank"
               rel="noreferrer"
-              className="transition-all duration-300 p-2 rounded-full bg-theme-sidebar-footer-icon hover:bg-theme-sidebar-footer-icon-hover"
+              className="transition-all duration-300 p-2 rounded-full bg-theme-sidebar-footer-icon hover:bg-theme-sidebar-footer-icon-hover hover:border-cyan-400/30 hover:shadow-[0_0_18px_rgba(6,182,212,0.12)] border border-transparent"
               aria-label="Find us on GitHub"
               data-tooltip-id="footer-item"
               data-tooltip-content="View Source Code"
@@ -70,7 +70,7 @@ export default function Footer() {
               to={paths.docs()}
               target="_blank"
               rel="noreferrer"
-              className="transition-all duration-300 p-2 rounded-full bg-theme-sidebar-footer-icon hover:bg-theme-sidebar-footer-icon-hover"
+              className="transition-all duration-300 p-2 rounded-full bg-theme-sidebar-footer-icon hover:bg-theme-sidebar-footer-icon-hover hover:border-cyan-400/30 hover:shadow-[0_0_18px_rgba(6,182,212,0.12)] border border-transparent"
               aria-label="Docs"
               data-tooltip-id="footer-item"
               data-tooltip-content="Open XSCALE AI help docs"
@@ -86,7 +86,7 @@ export default function Footer() {
               to={paths.discord()}
               target="_blank"
               rel="noreferrer"
-              className="transition-all duration-300 p-2 rounded-full bg-theme-sidebar-footer-icon hover:bg-theme-sidebar-footer-icon-hover"
+              className="transition-all duration-300 p-2 rounded-full bg-theme-sidebar-footer-icon hover:bg-theme-sidebar-footer-icon-hover hover:border-cyan-400/30 hover:shadow-[0_0_18px_rgba(6,182,212,0.12)] border border-transparent"
               aria-label="Join our Discord server"
               data-tooltip-id="footer-item"
               data-tooltip-content="Join the XSCALE AI Discord"
@@ -118,7 +118,7 @@ export default function Footer() {
             href={item.url}
             target="_blank"
             rel="noreferrer"
-            className="transition-all duration-300 flex w-fit h-fit p-2 p-2 rounded-full bg-theme-sidebar-footer-icon hover:bg-theme-sidebar-footer-icon-hover hover:border-slate-100"
+            className="transition-all duration-300 flex w-fit h-fit p-2 p-2 rounded-full bg-theme-sidebar-footer-icon hover:bg-theme-sidebar-footer-icon-hover hover:border-cyan-400/30 hover:shadow-[0_0_18px_rgba(6,182,212,0.12)] border border-transparent"
           >
             {React.createElement(
               ICON_COMPONENTS?.[item.icon] ?? ICON_COMPONENTS.Info,

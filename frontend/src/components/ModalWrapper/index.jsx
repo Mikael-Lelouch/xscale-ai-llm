@@ -20,14 +20,14 @@ export default function ModalWrapper({ children, isOpen, noPortal = false }) {
 
   if (noPortal) {
     return (
-      <div className="bg-black/60 backdrop-blur-sm fixed top-0 left-0 outline-none w-screen h-screen flex items-center justify-center z-99">
+      <div className="bg-[rgba(10,14,26,0.7)] backdrop-blur-md fixed top-0 left-0 outline-none w-screen h-screen flex items-center justify-center z-99">
         {children}
       </div>
     );
   }
 
   return createPortal(
-    <div className="bg-black/60 backdrop-blur-sm fixed top-0 left-0 outline-none w-screen h-screen flex items-center justify-center z-99">
+    <div className="bg-[rgba(10,14,26,0.7)] backdrop-blur-md fixed top-0 left-0 outline-none w-screen h-screen flex items-center justify-center z-99">
       {children}
     </div>,
     document.getElementById("root")

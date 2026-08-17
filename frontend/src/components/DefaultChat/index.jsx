@@ -102,7 +102,7 @@ export default function DefaultChatContainer() {
               to={paths.workspace.chat(
                 lastVisitedWorkspace?.slug || workspaces[0].slug
               )}
-              className="xscale-gradient-button mt-7 flex h-11 w-fit cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold text-slate-950 transition-all duration-200 hover:-translate-y-0.5"
+              className="xscale-gradient-button mt-7 flex h-11 w-fit cursor-pointer items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold text-slate-950 transition-all duration-200 hover:-translate-y-0.5"
             >
               {t("home.goToWorkspace", {
                 workspace: lastVisitedWorkspace?.name || workspaces[0].name,

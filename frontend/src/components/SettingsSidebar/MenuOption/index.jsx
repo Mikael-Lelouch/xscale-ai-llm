@@ -77,7 +77,7 @@ export default function MenuOption({
           rounded-[6px]
           ${
             isActive
-              ? "bg-theme-sidebar-subitem-selected font-medium border-outline"
+              ? "xscale-sidebar-item-active bg-theme-sidebar-subitem-selected font-medium border-outline"
               : "hover:bg-theme-sidebar-subitem-hover"
           }
         `}
