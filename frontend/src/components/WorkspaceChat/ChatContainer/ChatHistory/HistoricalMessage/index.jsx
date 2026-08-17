@@ -163,7 +163,7 @@ const HistoricalMessage = ({
             saveChanges={saveEditedMessage}
           />
         ) : (
-          <div className="break-words">
+          <div className="xscale-bubble-ai break-words rounded-[20px] rounded-bl-none px-4 py-3.5 max-w-[750px] [&_p]:m-0">
             <HistoricalClarifyingQuestions surveys={clarifyingQuestions} />
             {reasoning && reasoning.steps && reasoning.steps.length > 0 && (
               <ReasoningDisplay

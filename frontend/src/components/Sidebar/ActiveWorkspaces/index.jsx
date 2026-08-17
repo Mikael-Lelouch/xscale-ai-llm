@@ -122,9 +122,12 @@ export default function ActiveWorkspaces() {
                           aria-current={isActive ? "page" : ""}
                           className={`
                             transition-all duration-[200ms]
-                            flex flex-grow w-[75%] gap-x-2 py-[6px] pl-[4px] pr-[6px] rounded-[4px] text-white justify-start items-center
+                            flex flex-grow w-[75%] gap-x-2 py-[10px] pl-[12px] pr-[12px] rounded-xl text-white justify-start items-center
+                            border-l-[3px] border-transparent
                             bg-theme-sidebar-item-default
-                            ${isActive ? "light:bg-blue-200 font-bold" : "hover:bg-theme-sidebar-subitem-hover light:hover:bg-slate-300"}
+                            ${isActive
+                              ? "xscale-sidebar-item-active light:bg-blue-200 font-medium"
+                              : "hover:bg-cyan-400/[0.06] hover:border-l-cyan-400/30 light:hover:bg-slate-300"}
                           `}
                         >
                           <div className="flex flex-row justify-between w-full items-center">

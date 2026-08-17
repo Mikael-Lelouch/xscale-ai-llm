@@ -90,8 +90,7 @@ export default function Sidebar() {
                     <ActiveWorkspaces />
                   </div>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 pb-3 px-3 rounded-b-[16px] bg-theme-bg-sidebar light:bg-slate-200 bg-opacity-80 backdrop-filter backdrop-blur-md z-10 flex items-center justify-between">
-                  <Footer />
+                <div className="absolute bottom-0 left-0 right-0 pb-3 px-3 rounded-b-[16px] bg-theme-bg-sidebar light:bg-slate-200 bg-opacity-80 backdrop-filter backdrop-blur-md z-10 flex flex-col items-center gap-1.5">
                   <div className={`transition-opacity duration-500 ${showSidebar ? "opacity-100" : "opacity-0"}`}>
                     <SovereigntyBadge
                       mode={deploymentMode}
@@ -100,6 +99,7 @@ export default function Sidebar() {
                       className="flex-shrink-0"
                     />
                   </div>
+                  <Footer />
                 </div>
               </div>
             </div>
