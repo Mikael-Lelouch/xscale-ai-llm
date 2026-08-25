@@ -79,6 +79,9 @@ export default {
     chat: (slug, options = {}) => {
       return applyOptions(`/workspace/${slug}`, options);
     },
+    knowledgeGraph: (slug) => {
+      return `/workspace/${slug}/knowledge-graph`;
+    },
     settings: {
       generalAppearance: (slug) => {
         return `/workspace/${slug}/settings/general-appearance`;

@@ -141,7 +141,44 @@ const TRANSLATIONS = {
     vector: "Base de données vectorielle",
     members: "Membres",
     agent: "Configuration de l'agent",
+    graph: "Graphe de connaissances",
   },
+  knowledgeGraph: {
+    title: "Graphe de connaissances",
+    subtitle:
+      "Explorez les liens entre documents et concepts de cet espace de travail.",
+    search: "Rechercher des concepts…",
+    allRelationships: "Toutes les relations",
+    rebuild: "Reconstruire le graphe",
+    rebuilding: "Reconstruction…",
+    loading: "Chargement du graphe…",
+    export: "Exporter en JSON",
+    nodes: "Nœuds",
+    edges: "Liens",
+    emptyTitle: "Aucun graphe pour le moment",
+    emptyDescription:
+      "Indexez des documents dans cet espace de travail, puis reconstruisez le graphe pour extraire les concepts et les relations.",
+    emptyCta: "Reconstruire à partir des documents",
+    error: "Impossible de charger le graphe de connaissances.",
+    rebuildSuccess:
+      "Graphe reconstruit : {{nodes}} nœuds, {{edges}} liens à partir de {{documents}} documents.",
+    rebuildError: "Échec de la reconstruction du graphe de connaissances.",
+    category: "Catégorie",
+    description: "Description",
+    documentId: "ID du document",
+    legendDocument: "Document",
+    legendPerson: "Personne",
+    legendOrganization: "Organisation",
+    legendLocation: "Lieu",
+    legendConcept: "Concept",
+    open: "Graphe de connaissances",
+    backToChat: "Retour au chat",
+    vectorCardTitle: "Graphe de connaissances",
+    vectorCardDescription:
+      "Visualisez les relations entre concepts et documents extraits de cet espace de travail.",
+    vectorCardCta: "Ouvrir le graphe",
+  },
+
   general: {
     vector: {
       title: "Nombre de vecteurs",

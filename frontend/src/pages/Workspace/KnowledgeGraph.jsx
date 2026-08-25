@@ -1,424 +1,513 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Link, useParams } from "react-router-dom";
+import { isMobile } from "react-device-detect";
 import * as d3 from "d3";
-import { useParams } from "react-router-dom";
-import "./KnowledgeGraph.css";
+import {
+  ArrowUUpLeft,
+  Export,
+  Graph,
+  MagnifyingGlass,
+  SpinnerGap,
+} from "@phosphor-icons/react";
+import { useTranslation } from "react-i18next";
+import Sidebar, { SidebarMobileHeader } from "@/components/Sidebar";
+import PasswordModal, { usePasswordModal } from "@/components/Modals/Password";
+import { FullScreenLoader } from "@/components/Preloader";
+import KnowledgeGraphModel from "@/models/knowledgeGraph";
+import paths from "@/utils/paths";
+import showToast from "@/utils/toast";
 
-/**
- * Knowledge Graph Visualization Component
- * Interactive D3.js graph showing document and concept relationships
- */
-const KnowledgeGraph = () => {
-  const { workspaceSlug } = useParams();
+const NODE_COLORS = {
+  document: "#22d3ee",
+  person: "#f472b6",
+  organization: "#14b8a6",
+  location: "#fbbf24",
+  concept: "#8b5cf6",
+  topic: "#8b5cf6",
+};
+
+function nodeColor(node) {
+  if (node?.nodeType === "document") return NODE_COLORS.document;
+  return NODE_COLORS[node?.category] || NODE_COLORS.concept;
+}
+
+export default function KnowledgeGraphPage() {
+  const { loading, requiresAuth, mode } = usePasswordModal();
+
+  if (loading) return <FullScreenLoader />;
+  if (requiresAuth !== false) {
+    return <>{requiresAuth !== null && <PasswordModal mode={mode} />}</>;
+  }
+
+  return (
+    <div className="w-screen h-screen overflow-hidden bg-zinc-950 light:bg-slate-50 flex">
+      {!isMobile && <Sidebar />}
+      <KnowledgeGraphCanvas />
+    </div>
+  );
+}
+
+function KnowledgeGraphCanvas() {
+  const { t } = useTranslation();
+  const { slug } = useParams();
   const containerRef = useRef(null);
   const svgRef = useRef(null);
-  const [graphData, setGraphData] = useState(null);
+  const simulationRef = useRef(null);
+  const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [rebuilding, setRebuilding] = useState(false);
   const [error, setError] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [relationshipFilter, setRelationshipFilter] = useState("");
-  const [darkMode, setDarkMode] = useState(false);
 
-  // Fetch graph data
-  useEffect(() => {
-    fetchGraphData();
-    fetchStats();
-  }, [workspaceSlug]);
-
-  const fetchGraphData = useCallback(async () => {
+  const loadGraph = useCallback(async () => {
+    if (!slug) return;
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      const response = await fetch(
-        `/api/v1/workspace/${workspaceSlug}/knowledge-graph`
-      );
-      if (!response.ok) throw new Error("Failed to fetch graph data");
-      const data = await response.json();
-      setGraphData(data);
-      setError(null);
+      const [data, nextStats] = await Promise.all([
+        KnowledgeGraphModel.get(slug),
+        KnowledgeGraphModel.stats(slug),
+      ]);
+      if (data?.error && (!data.nodes || data.nodes.length === 0)) {
+        setError(data.error);
+      }
+      setGraphData({
+        nodes: data?.nodes || [],
+        edges: data?.edges || [],
+      });
+      setStats(nextStats);
     } catch (err) {
       setError(err.message);
-      console.error("Error fetching graph data:", err);
     } finally {
       setLoading(false);
     }
-  }, [workspaceSlug]);
+  }, [slug]);
 
-  const fetchStats = useCallback(async () => {
-    try {
-      const response = await fetch(
-        `/api/v1/workspace/${workspaceSlug}/knowledge-graph/stats`
-      );
-      if (!response.ok) throw new Error("Failed to fetch stats");
-      const data = await response.json();
-      setStats(data);
-    } catch (err) {
-      console.error("Error fetching stats:", err);
-    }
-  }, [workspaceSlug]);
-
-  // D3 Visualization
   useEffect(() => {
-    if (!graphData || !containerRef.current) return;
+    loadGraph();
+  }, [loadGraph]);
 
-    const filteredData = filterGraphData();
-    if (filteredData.nodes.length === 0) {
-      setError("No data to visualize");
-      return;
-    }
+  const relationshipTypes = useMemo(() => {
+    return [
+      ...new Set((graphData.edges || []).map((edge) => edge.relationshipType)),
+    ].filter(Boolean);
+  }, [graphData.edges]);
 
-    renderGraph(filteredData);
-  }, [graphData, relationshipFilter, selectedNode, darkMode]);
+  const filteredData = useMemo(() => {
+    const nodes = graphData.nodes || [];
+    const edges = graphData.edges || [];
+    const query = searchTerm.trim().toLowerCase();
 
-  const filterGraphData = () => {
-    if (!graphData) return { nodes: [], edges: [] };
-
-    let filteredEdges = graphData.edges;
+    let visibleEdges = edges;
     if (relationshipFilter) {
-      filteredEdges = filteredEdges.filter(
-        (e) => e.relationshipType === relationshipFilter
+      visibleEdges = edges.filter(
+        (edge) => edge.relationshipType === relationshipFilter
       );
     }
 
-    // Get node IDs that should be visible
-    const visibleNodeIds = new Set();
-    filteredEdges.forEach((edge) => {
-      visibleNodeIds.add(edge.source);
-      visibleNodeIds.add(edge.target);
-    });
-
-    // Always show all nodes (or filtered by search)
-    let visibleNodes = graphData.nodes;
-    if (searchTerm) {
-      visibleNodes = visibleNodes.filter((n) =>
-        n.label.toLowerCase().includes(searchTerm.toLowerCase())
+    let visibleNodes = nodes;
+    if (query) {
+      const matched = new Set(
+        nodes
+          .filter((node) => (node.label || "").toLowerCase().includes(query))
+          .map((node) => node.id)
       );
+      visibleEdges = visibleEdges.filter(
+        (edge) => matched.has(edge.source) || matched.has(edge.target)
+      );
+      const neighborIds = new Set(matched);
+      visibleEdges.forEach((edge) => {
+        neighborIds.add(edge.source);
+        neighborIds.add(edge.target);
+      });
+      visibleNodes = nodes.filter((node) => neighborIds.has(node.id));
+    } else if (relationshipFilter) {
+      const ids = new Set();
+      visibleEdges.forEach((edge) => {
+        ids.add(edge.source);
+        ids.add(edge.target);
+      });
+      visibleNodes = nodes.filter((node) => ids.has(node.id));
     }
 
-    return {
-      nodes: visibleNodes,
-      edges: filteredEdges,
-    };
-  };
+    return { nodes: visibleNodes, edges: visibleEdges };
+  }, [graphData, searchTerm, relationshipFilter]);
 
-  const renderGraph = (data) => {
-    const width = containerRef.current?.clientWidth || 800;
-    const height = containerRef.current?.clientHeight || 600;
+  useEffect(() => {
+    const container = containerRef.current;
+    const svgEl = svgRef.current;
+    if (!container || !svgEl) return;
 
-    // Clear previous SVG
-    d3.select(svgRef.current).selectAll("*").remove();
+    const width = container.clientWidth || 800;
+    const height = container.clientHeight || 600;
+    const svg = d3.select(svgEl);
+    svg.selectAll("*").remove();
+    svg.attr("width", width).attr("height", height);
 
-    const svg = d3
-      .select(svgRef.current)
-      .attr("width", width)
-      .attr("height", height);
+    if (simulationRef.current) {
+      simulationRef.current.stop();
+      simulationRef.current = null;
+    }
 
-    // Create background
-    svg
-      .append("rect")
-      .attr("width", width)
-      .attr("height", height)
-      .attr("fill", darkMode ? "#1a1a1a" : "#f5f5f5")
-      .attr("class", "bg");
+    if (!filteredData.nodes.length) return;
 
-    // Create force simulation
+    const nodes = filteredData.nodes.map((node) => ({ ...node }));
+    const links = filteredData.edges.map((edge) => ({ ...edge }));
+
+    const root = svg.append("g").attr("class", "kg-zoom-layer");
     const simulation = d3
-      .forceSimulation(data.nodes)
+      .forceSimulation(nodes)
       .force(
         "link",
         d3
-          .forceLink(data.edges)
+          .forceLink(links)
           .id((d) => d.id)
-          .distance(100)
-          .strength(0.5)
+          .distance(110)
+          .strength(0.45)
       )
-      .force("charge", d3.forceManyBody().strength(-300))
+      .force("charge", d3.forceManyBody().strength(-280))
       .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collision", d3.forceCollide().radius(40));
+      .force("collision", d3.forceCollide().radius(36));
 
-    // Draw edges
-    const links = svg
+    const link = root
       .append("g")
       .selectAll("line")
-      .data(data.edges)
+      .data(links)
       .enter()
       .append("line")
-      .attr("stroke", darkMode ? "#666" : "#ccc")
-      .attr("stroke-width", (d) => Math.sqrt(d.weight || 1))
-      .attr("opacity", 0.6);
+      .attr("stroke", "rgba(34,211,238,0.28)")
+      .attr("stroke-width", (d) => Math.max(1, Math.sqrt(d.weight || 1) / 2))
+      .attr("opacity", 0.8);
 
-    // Draw edge labels
-    const edgeLabels = svg
-      .append("g")
-      .selectAll("text")
-      .data(data.edges)
-      .enter()
-      .append("text")
-      .attr("font-size", "10px")
-      .attr("fill", darkMode ? "#aaa" : "#666")
-      .attr("text-anchor", "middle")
-      .text((d) => d.relationshipType);
-
-    // Draw nodes
-    const nodes = svg
+    const node = root
       .append("g")
       .selectAll("circle")
-      .data(data.nodes)
+      .data(nodes)
       .enter()
       .append("circle")
-      .attr("r", (d) => (d.nodeType === "document" ? 12 : 8))
-      .attr("fill", (d) => {
-        if (d.nodeType === "document") return "#3b82f6";
-        if (d.category === "person") return "#ef4444";
-        if (d.category === "organization") return "#10b981";
-        if (d.category === "location") return "#f59e0b";
-        return "#8b5cf6";
-      })
-      .attr("opacity", 0.8)
-      .attr("stroke", darkMode ? "#fff" : "#000")
+      .attr("r", (d) => (d.nodeType === "document" ? 11 : 7))
+      .attr("fill", (d) => nodeColor(d))
+      .attr("stroke", "rgba(15,20,34,0.9)")
       .attr("stroke-width", 2)
-      .call(drag(simulation))
+      .attr("cursor", "pointer")
+      .call(
+        d3
+          .drag()
+          .on("start", (event, d) => {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+          })
+          .on("drag", (event, d) => {
+            d.fx = event.x;
+            d.fy = event.y;
+          })
+          .on("end", (event, d) => {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+          })
+      )
       .on("click", (event, d) => {
         event.stopPropagation();
         setSelectedNode(d);
       });
 
-    // Draw labels
-    const labels = svg
+    const labels = root
       .append("g")
       .selectAll("text")
-      .data(data.nodes)
+      .data(nodes)
       .enter()
       .append("text")
       .attr("font-size", "11px")
-      .attr("fill", darkMode ? "#e0e0e0" : "#333")
+      .attr("fill", "#e2e8f0")
       .attr("text-anchor", "middle")
-      .attr("dy", "-15px")
-      .text((d) => d.label.substring(0, 20));
+      .attr("dy", "-14px")
+      .attr("pointer-events", "none")
+      .text((d) => (d.label || "").slice(0, 28));
 
-    // Update positions on simulation tick
     simulation.on("tick", () => {
-      links
+      link
         .attr("x1", (d) => d.source.x)
         .attr("y1", (d) => d.source.y)
         .attr("x2", (d) => d.target.x)
         .attr("y2", (d) => d.target.y);
-
-      edgeLabels
-        .attr("x", (d) => (d.source.x + d.target.x) / 2)
-        .attr("y", (d) => (d.source.y + d.target.y) / 2);
-
-      nodes.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
-
+      node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
       labels.attr("x", (d) => d.x).attr("y", (d) => d.y);
     });
 
-    // Click on background to deselect
+    svg.call(
+      d3
+        .zoom()
+        .scaleExtent([0.4, 3])
+        .on("zoom", (event) => {
+          root.attr("transform", event.transform);
+        })
+    );
     svg.on("click", () => setSelectedNode(null));
+    simulationRef.current = simulation;
 
-    // Zoom behavior
-    const zoom = d3.zoom().on("zoom", (event) => {
-      svg.selectAll("g").attr("transform", event.transform);
+    const observer = new ResizeObserver(() => {
+      const nextWidth = container.clientWidth || 800;
+      const nextHeight = container.clientHeight || 600;
+      svg.attr("width", nextWidth).attr("height", nextHeight);
+      simulation.force("center", d3.forceCenter(nextWidth / 2, nextHeight / 2));
+      simulation.alpha(0.2).restart();
     });
-    svg.call(zoom);
+    observer.observe(container);
 
-    return simulation;
-  };
-
-  const drag = (simulation) => {
-    const dragstarted = (event, d) => {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
+    return () => {
+      observer.disconnect();
+      simulation.stop();
+      svg.on("click", null);
+      svg.on(".zoom", null);
     };
+  }, [filteredData]);
 
-    const dragged = (event, d) => {
-      d.fx = event.x;
-      d.fy = event.y;
-    };
-
-    const dragended = (event, d) => {
-      if (!event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-    };
-
-    return d3
-      .drag()
-      .on("start", dragstarted)
-      .on("drag", dragged)
-      .on("end", dragended);
-  };
-
-  const exportGraph = () => {
-    const element = document.createElement("a");
-    const file = new Blob([JSON.stringify(graphData, null, 2)], {
-      type: "application/json",
-    });
-    element.href = URL.createObjectURL(file);
-    element.download = `knowledge-graph-${workspaceSlug}.json`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-  };
-
-  const rebuildGraph = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `/api/v1/workspace/${workspaceSlug}/knowledge-graph/rebuild`,
-        { method: "POST" }
-      );
-      if (!response.ok) throw new Error("Failed to rebuild graph");
-      await fetchGraphData();
-      await fetchStats();
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+  async function handleRebuild() {
+    if (!slug || rebuilding) return;
+    setRebuilding(true);
+    const result = await KnowledgeGraphModel.rebuild(slug);
+    setRebuilding(false);
+    if (!result?.success) {
+      showToast(result?.error || t("knowledgeGraph.rebuildError"), "error", {
+        clear: true,
+      });
+      return;
     }
-  };
+    showToast(
+      t("knowledgeGraph.rebuildSuccess", {
+        nodes: result.nodesCreated ?? result.finalStats?.totalNodes ?? 0,
+        edges: result.edgesCreated ?? result.finalStats?.totalEdges ?? 0,
+        documents: result.documentsProcessed ?? 0,
+      }),
+      "success",
+      { clear: true }
+    );
+    await loadGraph();
+  }
 
-  const getRelationshipTypes = () => {
-    if (!graphData) return [];
-    return [...new Set(graphData.edges.map((e) => e.relationshipType))];
-  };
+  function handleExport() {
+    const payload = {
+      ...graphData,
+      statistics: stats,
+      exportedAt: new Date().toISOString(),
+      workspace: slug,
+    };
+    const element = document.createElement("a");
+    element.href = URL.createObjectURL(
+      new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" })
+    );
+    element.download = `knowledge-graph-${slug}.json`;
+    element.click();
+    URL.revokeObjectURL(element.href);
+  }
+
+  const isEmpty = !loading && graphData.nodes.length === 0;
 
   return (
-    <div className={`knowledge-graph-container ${darkMode ? "dark" : ""}`}>
-      <div className="kg-header">
-        <div className="kg-title">
-          <h1>Knowledge Graph</h1>
-          <p>Interactive visualization of document and concept relationships</p>
-        </div>
-
-        <div className="kg-controls">
-          <input
-            type="text"
-            placeholder="Search concepts..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="kg-search"
-          />
-
-          <select
-            value={relationshipFilter}
-            onChange={(e) => setRelationshipFilter(e.target.value)}
-            className="kg-filter"
+    <div
+      style={{ height: isMobile ? "100%" : "calc(100% - 32px)" }}
+      className="relative md:ml-[2px] md:mr-[16px] md:my-[16px] md:rounded-[20px] xscale-grid-bg w-full h-full overflow-hidden border border-white/[0.06] light:border-theme-sidebar-border shadow-[0_16px_50px_rgba(0,0,0,0.2)] flex flex-col"
+    >
+      {isMobile && <SidebarMobileHeader />}
+      <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-white/[0.06] light:border-theme-modal-border">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link
+            to={paths.workspace.chat(slug)}
+            className="flex items-center justify-center h-9 w-9 rounded-full bg-theme-sidebar-footer-icon hover:bg-theme-sidebar-footer-icon-hover text-white"
+            aria-label={t("knowledgeGraph.backToChat")}
           >
-            <option value="">All relationships</option>
-            {getRelationshipTypes().map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-
-          <button onClick={() => setDarkMode(!darkMode)} className="kg-btn">
-            {darkMode ? "☀️" : "🌙"}
+            <ArrowUUpLeft className="h-5 w-5" weight="fill" />
+          </Link>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <Graph size={18} className="text-cyan-300" weight="duotone" />
+              <h1 className="xscale-gradient-text text-lg font-semibold truncate">
+                {t("knowledgeGraph.title")}
+              </h1>
+            </div>
+            <p className="text-xs text-theme-text-secondary mt-0.5 truncate">
+              {t("knowledgeGraph.subtitle")}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          {stats && (
+            <>
+              <span className="xscale-pill rounded-full px-3 py-1 text-[11px] uppercase tracking-wider">
+                {t("knowledgeGraph.nodes")} {stats.totalNodes}
+              </span>
+              <span className="xscale-pill rounded-full px-3 py-1 text-[11px] uppercase tracking-wider">
+                {t("knowledgeGraph.edges")} {stats.totalEdges}
+              </span>
+            </>
+          )}
+          <button
+            type="button"
+            onClick={handleRebuild}
+            disabled={rebuilding}
+            className="xscale-gradient-button h-9 px-4 rounded-full text-xs font-semibold text-slate-950 disabled:opacity-60"
+          >
+            {rebuilding
+              ? t("knowledgeGraph.rebuilding")
+              : t("knowledgeGraph.rebuild")}
           </button>
-
-          <button onClick={rebuildGraph} className="kg-btn" disabled={loading}>
-            {loading ? "Rebuilding..." : "Rebuild"}
-          </button>
-
-          <button onClick={exportGraph} className="kg-btn">
-            Export
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={!graphData.nodes.length}
+            className="h-9 px-3 rounded-full border border-white/10 text-white/80 text-xs hover:border-cyan-400/40 disabled:opacity-40"
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <Export size={14} />
+              {t("knowledgeGraph.export")}
+            </span>
           </button>
         </div>
       </div>
 
-      <div className="kg-content">
-        <div className="kg-stats">
-          {stats && (
-            <>
-              <div className="stat-item">
-                <span className="stat-label">Nodes</span>
-                <span className="stat-value">{stats.totalNodes}</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-label">Edges</span>
-                <span className="stat-value">{stats.totalEdges}</span>
-              </div>
-              {stats.nodeTypes && stats.nodeTypes.length > 0 && (
-                <div className="stat-item">
-                  <span className="stat-label">Types</span>
-                  <div className="stat-breakdown">
-                    {stats.nodeTypes.map((nt) => (
-                      <span key={nt.type} className="stat-type">
-                        {nt.type}: {nt.count}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
+      <div className="flex items-center gap-2 px-5 py-3 border-b border-white/[0.04]">
+        <div className="relative flex-1 max-w-md">
+          <MagnifyingGlass
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40"
+          />
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder={t("knowledgeGraph.search")}
+            className="xscale-composer w-full h-9 rounded-xl pl-9 pr-3 text-sm text-white placeholder:text-white/40 outline-none"
+          />
         </div>
+        <select
+          value={relationshipFilter}
+          onChange={(event) => setRelationshipFilter(event.target.value)}
+          className="h-9 rounded-xl bg-theme-bg-secondary border border-white/10 text-sm text-white px-3 outline-none"
+        >
+          <option value="">{t("knowledgeGraph.allRelationships")}</option>
+          {relationshipTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        <div className="kg-graph-container" ref={containerRef}>
-          {loading && (
-            <div className="kg-loading">Loading knowledge graph...</div>
+      <div className="relative flex-1 min-h-0 flex">
+        <div ref={containerRef} className="relative flex-1 min-w-0">
+          {(loading || rebuilding) && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 backdrop-blur-[2px]">
+              <div className="xscale-glass rounded-2xl px-5 py-4 flex items-center gap-3 text-sm text-white">
+                <SpinnerGap className="animate-spin" size={18} />
+                {rebuilding
+                  ? t("knowledgeGraph.rebuilding")
+                  : t("knowledgeGraph.loading")}
+              </div>
+            </div>
           )}
-          {error && <div className="kg-error">Error: {error}</div>}
-          <svg ref={svgRef}></svg>
+          {isEmpty && !error && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
+              <div className="xscale-glass max-w-md rounded-2xl p-8 text-center">
+                <Graph
+                  size={36}
+                  className="mx-auto text-cyan-300 mb-4"
+                  weight="duotone"
+                />
+                <h2 className="text-white text-lg font-semibold mb-2">
+                  {t("knowledgeGraph.emptyTitle")}
+                </h2>
+                <p className="text-sm text-theme-text-secondary leading-6 mb-5">
+                  {t("knowledgeGraph.emptyDescription")}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleRebuild}
+                  disabled={rebuilding}
+                  className="xscale-gradient-button h-10 px-5 rounded-full text-sm font-semibold text-slate-950"
+                >
+                  {t("knowledgeGraph.emptyCta")}
+                </button>
+              </div>
+            </div>
+          )}
+          {error && isEmpty && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center p-6">
+              <div className="xscale-glass max-w-md rounded-2xl p-6 text-center text-sm text-rose-300">
+                {t("knowledgeGraph.error")}
+              </div>
+            </div>
+          )}
+          <svg ref={svgRef} className="w-full h-full" role="img" />
         </div>
 
         {selectedNode && (
-          <div className="kg-sidebar">
-            <div className="kg-node-details">
-              <h3>{selectedNode.label}</h3>
-              <div className="kg-node-info">
-                <p>
-                  <strong>Type:</strong> {selectedNode.nodeType}
-                </p>
-                {selectedNode.category && (
-                  <p>
-                    <strong>Category:</strong> {selectedNode.category}
-                  </p>
-                )}
-                {selectedNode.description && (
-                  <p>
-                    <strong>Description:</strong> {selectedNode.description}
-                  </p>
-                )}
-                {selectedNode.docId && (
-                  <p>
-                    <strong>Document ID:</strong> {selectedNode.docId}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
+          <aside className="w-[280px] shrink-0 border-l border-white/[0.06] p-5 overflow-y-auto">
+            <p className="text-[10px] uppercase tracking-[0.18em] text-cyan-300 mb-2">
+              {selectedNode.nodeType}
+            </p>
+            <h3 className="text-white font-semibold text-base mb-3 break-words">
+              {selectedNode.label}
+            </h3>
+            <dl className="space-y-2 text-sm text-theme-text-secondary">
+              {selectedNode.category && (
+                <div>
+                  <dt className="text-[11px] uppercase tracking-wider text-white/40">
+                    {t("knowledgeGraph.category")}
+                  </dt>
+                  <dd>{selectedNode.category}</dd>
+                </div>
+              )}
+              {selectedNode.description && (
+                <div>
+                  <dt className="text-[11px] uppercase tracking-wider text-white/40">
+                    {t("knowledgeGraph.description")}
+                  </dt>
+                  <dd>{selectedNode.description}</dd>
+                </div>
+              )}
+              {selectedNode.docId && (
+                <div>
+                  <dt className="text-[11px] uppercase tracking-wider text-white/40">
+                    {t("knowledgeGraph.documentId")}
+                  </dt>
+                  <dd className="break-all font-mono text-xs">
+                    {selectedNode.docId}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </aside>
         )}
       </div>
 
-      <div className="kg-legend">
-        <h4>Legend</h4>
-        <div className="legend-item">
-          <span className="legend-color" style={{ backgroundColor: "#3b82f6" }}></span>
-          <span>Document</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ backgroundColor: "#ef4444" }}></span>
-          <span>Person</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ backgroundColor: "#10b981" }}></span>
-          <span>Organization</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ backgroundColor: "#f59e0b" }}></span>
-          <span>Location</span>
-        </div>
-        <div className="legend-item">
-          <span className="legend-color" style={{ backgroundColor: "#8b5cf6" }}></span>
-          <span>Concept</span>
-        </div>
+      <div className="absolute bottom-4 left-5 xscale-glass rounded-xl px-3 py-2 flex flex-wrap gap-3 text-[11px] text-white/70">
+        {Object.entries({
+          document: t("knowledgeGraph.legendDocument"),
+          person: t("knowledgeGraph.legendPerson"),
+          organization: t("knowledgeGraph.legendOrganization"),
+          location: t("knowledgeGraph.legendLocation"),
+          concept: t("knowledgeGraph.legendConcept"),
+        }).map(([key, label]) => (
+          <span key={key} className="inline-flex items-center gap-1.5">
+            <span
+              className="h-2.5 w-2.5 rounded-full"
+              style={{ backgroundColor: NODE_COLORS[key] }}
+            />
+            {label}
+          </span>
+        ))}
       </div>
     </div>
   );
-};
-
-export default KnowledgeGraph;
+}
