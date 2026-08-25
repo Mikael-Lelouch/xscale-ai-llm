@@ -45,6 +45,15 @@ const router = createBrowserRouter([
         },
       },
       {
+        path: "/workspace/:slug/knowledge-graph",
+        lazy: async () => {
+          const { default: KnowledgeGraph } = await import(
+            "@/pages/Workspace/KnowledgeGraph"
+          );
+          return { element: <PrivateRoute Component={KnowledgeGraph} /> };
+        },
+      },
+      {
         path: "/workspace/:slug",
         lazy: async () => {
           const { default: WorkspaceChat } = await import(

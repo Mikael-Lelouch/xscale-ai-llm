@@ -5,6 +5,7 @@ import TextSizeRow from "./TextSize";
 import MemoriesRow from "./Memories";
 import CopyLinkToChatRow from "./CopyLinkToChat";
 import ExportRow from "./Export";
+import KnowledgeGraphRow from "./KnowledgeGraph";
 
 export default function ChatSettingsMenu({
   history = [],
@@ -65,6 +66,10 @@ export default function ChatSettingsMenu({
         >
           <TextSizeRow />
           <MemoriesRow onClose={() => setShowMenu(false)} />
+          <KnowledgeGraphRow
+            workspace={workspace}
+            onClose={() => setShowMenu(false)}
+          />
           <ExportRow
             history={history}
             workspace={workspace}

@@ -7,6 +7,10 @@ const { KnowledgeGraph } = require("../../models/knowledgeGraph");
 const { Document } = require("../../models/documents");
 
 const GraphBuilder = {
+  MAX_DOCUMENTS_PER_REBUILD: 75,
+  MAX_DOCUMENT_CHARS: 40_000,
+  MAX_RELATED_EDGES: 200,
+
   // Common entity patterns for basic NER
   ENTITY_PATTERNS: {
     person: /\b([A-Z][a-z]+)\s+([A-Z][a-z]+)/g, // Names like "John Smith"
@@ -176,19 +180,21 @@ const GraphBuilder = {
    * @param {string} docId
    * @param {string} filename
    * @param {string} documentText - Optional document content
+   * @param {Map<string, object>} [conceptIndex] - labelLower -> existing concept node
    * @returns {Promise<{success: boolean, nodesCreated: number, edgesCreated: number}>}
    */
   buildGraphForDocument: async function (
     workspaceId,
     docId,
     filename,
-    documentText = ""
+    documentText = "",
+    conceptIndex = null
   ) {
     let nodesCreated = 0;
     let edgesCreated = 0;
+    const index = conceptIndex || new Map();
 
     try {
-      // Create document node
       const docNodeResult = await KnowledgeGraph.createNode(
         workspaceId,
         "document",
@@ -209,20 +215,12 @@ const GraphBuilder = {
       const documentNode = docNodeResult.node;
       nodesCreated++;
 
-      // Extract concepts from document text if provided
       if (documentText && documentText.length > 0) {
         const concepts = this.extractConcepts(documentText, docId);
 
-        // Create concept nodes and link to document
         for (const concept of concepts) {
-          // Check if concept node already exists
-          const existingNodes = await KnowledgeGraph.searchNodes(
-            workspaceId,
-            concept.value
-          );
-          let conceptNode = existingNodes.find(
-            (n) => n.nodeType === "concept" && n.label === concept.value
-          );
+          const key = concept.value.toLowerCase();
+          let conceptNode = index.get(key);
 
           if (!conceptNode) {
             const conceptResult = await KnowledgeGraph.createNode(
@@ -230,15 +228,16 @@ const GraphBuilder = {
               "concept",
               concept.value,
               null,
-              `Concept extracted from documents`
+              "Concept extracted from documents",
+              concept.type || null
             );
             if (conceptResult.success) {
               conceptNode = conceptResult.node;
+              index.set(key, conceptNode);
               nodesCreated++;
             }
           }
 
-          // Create edge from document to concept
           if (conceptNode) {
             const edgeResult = await KnowledgeGraph.createEdge(
               workspaceId,
@@ -251,38 +250,6 @@ const GraphBuilder = {
             if (edgeResult.isNew) {
               edgesCreated++;
             }
-          }
-        }
-      }
-
-      // Find and create connections to other documents
-      const connections = await this.findConceptConnections(
-        workspaceId,
-        docId,
-        []
-      );
-
-      for (const connection of connections) {
-        // Get or create node for connected document
-        const otherDocNodes = await KnowledgeGraph.getDocumentNodes(
-          workspaceId,
-          connection.docId
-        );
-        let otherDocNode = otherDocNodes.find(
-          (n) => n.nodeType === "document"
-        );
-
-        if (otherDocNode) {
-          const edgeResult = await KnowledgeGraph.createEdge(
-            workspaceId,
-            documentNode.id,
-            otherDocNode.id,
-            "related",
-            connection.strength,
-            connection.strength / 100
-          );
-          if (edgeResult.isNew) {
-            edgesCreated++;
           }
         }
       }
@@ -304,26 +271,108 @@ const GraphBuilder = {
   },
 
   /**
+   * Link document nodes that share at least two extracted concepts.
+   * @param {number} workspaceId
+   * @returns {Promise<number>} number of new related edges
+   */
+  linkDocumentsBySharedConcepts: async function (workspaceId) {
+    const mentionEdges = await KnowledgeGraph.getEdges(workspaceId, "mentions");
+    const conceptToDocs = new Map();
+
+    for (const edge of mentionEdges) {
+      const from = edge.fromNode;
+      const to = edge.toNode;
+      if (!from || !to) continue;
+
+      let documentNode = null;
+      let conceptNode = null;
+      if (from.nodeType === "document" && to.nodeType === "concept") {
+        documentNode = from;
+        conceptNode = to;
+      } else if (from.nodeType === "concept" && to.nodeType === "document") {
+        documentNode = to;
+        conceptNode = from;
+      }
+      if (!documentNode || !conceptNode) continue;
+
+      if (!conceptToDocs.has(conceptNode.id)) {
+        conceptToDocs.set(conceptNode.id, new Set());
+      }
+      conceptToDocs.get(conceptNode.id).add(documentNode.id);
+    }
+
+    const pairCounts = new Map();
+    for (const docIds of conceptToDocs.values()) {
+      const ids = [...docIds];
+      if (ids.length < 2) continue;
+      for (let i = 0; i < ids.length; i++) {
+        for (let j = i + 1; j < ids.length; j++) {
+          const a = Math.min(ids[i], ids[j]);
+          const b = Math.max(ids[i], ids[j]);
+          const key = `${a}:${b}`;
+          pairCounts.set(key, (pairCounts.get(key) || 0) + 1);
+        }
+      }
+    }
+
+    const rankedPairs = [...pairCounts.entries()]
+      .filter(([, count]) => count >= 2)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, this.MAX_RELATED_EDGES);
+
+    let edgesCreated = 0;
+    for (const [key, sharedCount] of rankedPairs) {
+      const [fromId, toId] = key.split(":").map(Number);
+      const strength = Math.min(100, 35 + sharedCount * 15);
+      const result = await KnowledgeGraph.createEdge(
+        workspaceId,
+        fromId,
+        toId,
+        "related",
+        strength,
+        Math.min(1, 0.35 + sharedCount * 0.15),
+        `Share ${sharedCount} concept${sharedCount === 1 ? "" : "s"}`
+      );
+      if (result.isNew) edgesCreated++;
+    }
+
+    return edgesCreated;
+  },
+
+  /**
    * Rebuild entire knowledge graph for a workspace
    * @param {number} workspaceId
    * @returns {Promise<{success: boolean, stats: object}>}
    */
   rebuildWorkspaceGraph: async function (workspaceId) {
     try {
-      // Clear existing graph
       await KnowledgeGraph.clearWorkspaceGraph(workspaceId);
 
-      // Get all documents in workspace
       const documents = await Document.forWorkspace(workspaceId);
+      const limitedDocs = documents.slice(0, this.MAX_DOCUMENTS_PER_REBUILD);
+      const conceptIndex = new Map();
 
       let totalNodesCreated = 0;
       let totalEdgesCreated = 0;
 
-      for (const doc of documents) {
+      for (const doc of limitedDocs) {
+        let text = "";
+        try {
+          const data = await Document.contentByDocPath(doc.docpath);
+          text = String(data?.content || "").slice(0, this.MAX_DOCUMENT_CHARS);
+        } catch (error) {
+          console.error(
+            `Knowledge graph: could not read ${doc.docpath}:`,
+            error.message
+          );
+        }
+
         const result = await this.buildGraphForDocument(
           workspaceId,
           doc.docId,
-          doc.filename
+          doc.filename,
+          text,
+          conceptIndex
         );
         if (result.success) {
           totalNodesCreated += result.nodesCreated;
@@ -331,12 +380,16 @@ const GraphBuilder = {
         }
       }
 
-      // Get final statistics
+      totalEdgesCreated += await this.linkDocumentsBySharedConcepts(
+        workspaceId
+      );
+
       const stats = await KnowledgeGraph.getGraphStatistics(workspaceId);
 
       return {
         success: true,
-        documentsProcessed: documents.length,
+        documentsProcessed: limitedDocs.length,
+        documentsSkipped: Math.max(0, documents.length - limitedDocs.length),
         nodesCreated: totalNodesCreated,
         edgesCreated: totalEdgesCreated,
         finalStats: stats,

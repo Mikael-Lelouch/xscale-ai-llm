@@ -1,18 +1,38 @@
 const { v4: uuidv4 } = require("uuid");
 const prisma = require("../utils/prisma");
+const {
+  toVisualizationGraph,
+  countValue,
+} = require("../utils/rag/graphVisualization");
+
+function toWorkspaceId(workspaceId) {
+  const id = Number(workspaceId);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
 
 const KnowledgeGraph = {
   // Create a new node in the graph
-  createNode: async function (workspaceId, nodeType, label, docId = null, description = null) {
+  createNode: async function (
+    workspaceId,
+    nodeType,
+    label,
+    docId = null,
+    description = null,
+    category = null
+  ) {
     try {
+      const id = toWorkspaceId(workspaceId);
+      if (!id) return { success: false, error: "Invalid workspace ID" };
+
       const node = await prisma.knowledge_graph_nodes.create({
         data: {
           uuid: uuidv4(),
-          workspaceId,
+          workspaceId: id,
           nodeType,
           label,
           docId,
           description,
+          category,
           metadata: JSON.stringify({}),
         },
       });
@@ -34,10 +54,13 @@ const KnowledgeGraph = {
     reasoning = null
   ) {
     try {
+      const id = toWorkspaceId(workspaceId);
+      if (!id) return { success: false, error: "Invalid workspace ID" };
+
       // Check for duplicate edges
       const existing = await prisma.knowledge_graph_edges.findFirst({
         where: {
-          workspaceId,
+          workspaceId: id,
           fromNodeId,
           toNodeId,
           relationshipType,
@@ -51,7 +74,7 @@ const KnowledgeGraph = {
       const edge = await prisma.knowledge_graph_edges.create({
         data: {
           uuid: uuidv4(),
-          workspaceId,
+          workspaceId: id,
           fromNodeId,
           toNodeId,
           relationshipType,
@@ -71,7 +94,9 @@ const KnowledgeGraph = {
   // Get all nodes for a workspace
   getNodes: async function (workspaceId, nodeType = null) {
     try {
-      const where = { workspaceId };
+      const id = toWorkspaceId(workspaceId);
+      if (!id) return [];
+      const where = { workspaceId: id };
       if (nodeType) {
         where.nodeType = nodeType;
       }
@@ -90,7 +115,9 @@ const KnowledgeGraph = {
   // Get all edges for a workspace
   getEdges: async function (workspaceId, relationshipType = null) {
     try {
-      const where = { workspaceId };
+      const id = toWorkspaceId(workspaceId);
+      if (!id) return [];
+      const where = { workspaceId: id };
       if (relationshipType) {
         where.relationshipType = relationshipType;
       }
@@ -113,8 +140,11 @@ const KnowledgeGraph = {
   // Get full graph structure for visualization
   getGraphData: async function (workspaceId) {
     try {
+      const id = toWorkspaceId(workspaceId);
+      if (!id) return { nodes: [], edges: [] };
+
       const nodes = await prisma.knowledge_graph_nodes.findMany({
-        where: { workspaceId },
+        where: { workspaceId: id },
         select: {
           id: true,
           uuid: true,
@@ -128,7 +158,7 @@ const KnowledgeGraph = {
       });
 
       const edges = await prisma.knowledge_graph_edges.findMany({
-        where: { workspaceId },
+        where: { workspaceId: id },
         select: {
           id: true,
           uuid: true,
@@ -142,18 +172,7 @@ const KnowledgeGraph = {
         },
       });
 
-      return {
-        nodes: nodes.map((n) => ({
-          ...n,
-          id: n.uuid, // Use UUID as primary identifier for frontend
-        })),
-        edges: edges.map((e) => ({
-          ...e,
-          id: e.uuid,
-          source: e.fromNodeId,
-          target: e.toNodeId,
-        })),
-      };
+      return toVisualizationGraph(nodes, edges);
     } catch (error) {
       console.error(`Failed to get graph data:`, error);
       return { nodes: [], edges: [] };
@@ -184,12 +203,16 @@ const KnowledgeGraph = {
   // Search nodes by label or description
   searchNodes: async function (workspaceId, query) {
     try {
+      const id = toWorkspaceId(workspaceId);
+      if (!id || !query) return [];
+
+      // SQLite does not support Prisma's `mode: "insensitive"`.
       const nodes = await prisma.knowledge_graph_nodes.findMany({
         where: {
-          workspaceId,
+          workspaceId: id,
           OR: [
-            { label: { contains: query, mode: "insensitive" } },
-            { description: { contains: query, mode: "insensitive" } },
+            { label: { contains: query } },
+            { description: { contains: query } },
           ],
         },
         take: 20,
@@ -329,11 +352,14 @@ const KnowledgeGraph = {
   // Clean up graph data for a workspace (delete all nodes/edges)
   clearWorkspaceGraph: async function (workspaceId) {
     try {
+      const id = toWorkspaceId(workspaceId);
+      if (!id) return { success: false, error: "Invalid workspace ID" };
+
       const edgesDeleted = await prisma.knowledge_graph_edges.deleteMany({
-        where: { workspaceId },
+        where: { workspaceId: id },
       });
       const nodesDeleted = await prisma.knowledge_graph_nodes.deleteMany({
-        where: { workspaceId },
+        where: { workspaceId: id },
       });
       return {
         success: true,
@@ -349,24 +375,34 @@ const KnowledgeGraph = {
   // Get statistics about the graph
   getGraphStatistics: async function (workspaceId) {
     try {
+      const id = toWorkspaceId(workspaceId);
+      if (!id) {
+        return {
+          totalNodes: 0,
+          totalEdges: 0,
+          nodeTypes: [],
+          relationshipTypes: [],
+        };
+      }
+
       const nodeCount = await prisma.knowledge_graph_nodes.count({
-        where: { workspaceId },
+        where: { workspaceId: id },
       });
 
       const edgeCount = await prisma.knowledge_graph_edges.count({
-        where: { workspaceId },
+        where: { workspaceId: id },
       });
 
       const nodeTypes = await prisma.knowledge_graph_nodes.groupBy({
         by: ["nodeType"],
-        where: { workspaceId },
-        _count: true,
+        where: { workspaceId: id },
+        _count: { _all: true },
       });
 
       const relationshipTypes = await prisma.knowledge_graph_edges.groupBy({
         by: ["relationshipType"],
-        where: { workspaceId },
-        _count: true,
+        where: { workspaceId: id },
+        _count: { _all: true },
       });
 
       return {
@@ -374,11 +410,11 @@ const KnowledgeGraph = {
         totalEdges: edgeCount,
         nodeTypes: nodeTypes.map((nt) => ({
           type: nt.nodeType,
-          count: nt._count,
+          count: countValue(nt._count),
         })),
         relationshipTypes: relationshipTypes.map((rt) => ({
           type: rt.relationshipType,
-          count: rt._count,
+          count: countValue(rt._count),
         })),
       };
     } catch (error) {

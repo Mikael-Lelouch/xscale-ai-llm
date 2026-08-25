@@ -159,7 +159,44 @@ const TRANSLATIONS = {
     vector: "Basis Data Vektor",
     members: "Anggota",
     agent: "Konfigurasi Agen",
+    graph: "Knowledge Graph",
   },
+  knowledgeGraph: {
+    title: "Knowledge Graph",
+    subtitle:
+      "Explore how documents and concepts connect in this workspace.",
+    search: "Search concepts…",
+    allRelationships: "All relationships",
+    rebuild: "Rebuild graph",
+    rebuilding: "Rebuilding…",
+    loading: "Loading knowledge graph…",
+    export: "Export JSON",
+    nodes: "Nodes",
+    edges: "Edges",
+    emptyTitle: "No graph yet",
+    emptyDescription:
+      "Index documents in this workspace, then rebuild the graph to extract concepts and relationships.",
+    emptyCta: "Rebuild from documents",
+    error: "Could not load the knowledge graph.",
+    rebuildSuccess:
+      "Graph rebuilt: {{nodes}} nodes, {{edges}} edges from {{documents}} documents.",
+    rebuildError: "Failed to rebuild the knowledge graph.",
+    category: "Category",
+    description: "Description",
+    documentId: "Document ID",
+    legendDocument: "Document",
+    legendPerson: "Person",
+    legendOrganization: "Organization",
+    legendLocation: "Location",
+    legendConcept: "Concept",
+    open: "Knowledge Graph",
+    backToChat: "Back to chat",
+    vectorCardTitle: "Knowledge Graph",
+    vectorCardDescription:
+      "Visualize concept and document relationships extracted from this workspace.",
+    vectorCardCta: "Open graph",
+  },
+
   general: {
     vector: {
       title: "Jumlah Vektor",

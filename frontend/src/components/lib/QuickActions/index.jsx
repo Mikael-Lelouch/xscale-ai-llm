@@ -14,6 +14,7 @@ export default function QuickActions({
   onCreateAgent,
   onEditWorkspace,
   onUploadDocument,
+  onOpenKnowledgeGraph,
 }) {
   const { t } = useTranslation();
   const { user } = useUser();
@@ -38,6 +39,13 @@ export default function QuickActions({
         onClick={onUploadDocument}
         // Any user can upload documents.
         show={true}
+      />
+      <QuickActionButton
+        label={t("knowledgeGraph.open")}
+        onClick={onOpenKnowledgeGraph}
+        show={
+          hasAvailableWorkspace && typeof onOpenKnowledgeGraph === "function"
+        }
       />
     </div>
   );

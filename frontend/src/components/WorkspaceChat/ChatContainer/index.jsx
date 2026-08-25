@@ -496,6 +496,9 @@ export default function ChatContainer({
                     onUploadDocument={() =>
                       document.getElementById("dnd-chat-file-uploader")?.click()
                     }
+                    onOpenKnowledgeGraph={() =>
+                      navigate(paths.workspace.knowledgeGraph(workspace.slug))
+                    }
                   />
                 </div>
                 <SuggestedMessages

@@ -33,6 +33,7 @@ const { purgeDocument } = require("../utils/files/purgeDocument");
 const { getModelTag } = require("./utils");
 const { searchWorkspaceAndThreads } = require("../utils/helpers/search");
 const { workspaceParsedFilesEndpoints } = require("./workspacesParsedFiles");
+const { knowledgeGraphEndpoints } = require("./knowledgeGraph");
 const {
   workspaceDeletionProtection,
 } = require("../utils/middleware/workspaceDeletionProtection");
@@ -1049,10 +1050,7 @@ function workspaceEndpoints(app) {
 
   // Parsed Files in separate endpoint just to keep the workspace endpoints clean
   workspaceParsedFilesEndpoints(app);
-
-  // Knowledge Graph endpoints
-  const knowledgeGraphRouter = require("./knowledgeGraph");
-  app.use("/v1/workspace", knowledgeGraphRouter);
+  knowledgeGraphEndpoints(app);
 }
 
 module.exports = { workspaceEndpoints };
